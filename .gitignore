@@ -4,3 +4,5 @@ Output/
 build/*
 !Output/Output.md
 
+
+.vscode/

@@ -10,7 +10,7 @@ if(UNIX)
     endif()
     set(CMAKE_CXX_FLAGS "-O3")
     # to improve: no hard code
-    set(CMAKE_CUDA_COMPILER "/usr/local/cuda11.8/bin")
+    set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 endif()
 
 project(gpu_ipc LANGUAGES CXX CUDA)
@@ -20,6 +20,9 @@ find_package(Eigen3 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(OpenGL REQUIRED)
+
+find_package(CUDA  REQUIRED)
+include_directories("${CUDA_INCLUDE_DIRS}")
 
 
 add_executable(gipc)

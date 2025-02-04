@@ -371,6 +371,23 @@ __global__ void PCG_add_Reduction_force(double* squeue, const double3* b, int nu
         squeue[blockIdx.x] = temp;
     }
 }
+
+
+__global__ void __Negate_Double3_Arrary(double3* b, int numbers) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= numbers) return;
+    //int cfid = tid + CONFLICT_FREE_OFFSET(tid);
+    double3 t_b = b[idx];
+    b[idx] = make_double3(-t_b.x, -t_b.y, -t_b.z);
+}
+
+__global__ void __Array_Subtract(double3* A, double3* B, double3* C, int numbers) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= numbers) return;
+    //int cfid = tid + CONFLICT_FREE_OFFSET(tid);
+    C[idx] = __GEIGEN__::__minus(A[idx], B[idx]);
+}
+
 __global__ void __PCG_FinalStep_UpdateC(const __GEIGEN__::Matrix3x3d* constraints, const double3* s, double3* c, double rate, int numbers) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= numbers) return;
@@ -1232,6 +1249,27 @@ double My_PCG_add_Reduction_Algorithm(int type, device_TetraData* mesh, PCG_Data
     return result;
 }
 
+
+void My_Negate_Double3_Arrary(double3* arr, int vertexNum) {
+
+    int numbers = vertexNum;
+    const unsigned int threadNum = default_threads;
+    int blockNum = (numbers + threadNum - 1) / threadNum;
+
+    __Negate_Double3_Arrary  << <blockNum, threadNum >> > (arr, numbers);
+}
+
+
+void My_Array_Subtract(double3* A, double3* B, double3* C, int vertexNum) {
+
+    int numbers = vertexNum;
+    const unsigned int threadNum = default_threads;
+    int blockNum = (numbers + threadNum - 1) / threadNum;
+
+    __Array_Subtract  << <blockNum, threadNum >> > (A, B, C, numbers);
+}
+
+
 void Solve_PCG_AX_B(const device_TetraData* mesh, const double3* c, double3* q, const BHessian& BH, int vertNum) {
     int numbers = vertNum;
     const unsigned int threadNum = default_threads;
@@ -1466,30 +1504,110 @@ int PCG_Process(device_TetraData* mesh, PCG_Data* pcg_data, const BHessian& BH, 
     double errorRate = threshold/* * IPC_dt * IPC_dt*/;
     //printf("cg error Rate:   %f        meanVolumn: %f\n", errorRate, meanVolumn);
     int cgCounts = 0;
-    while (cgCounts<30000 && deltaN > errorRate * delta0) {
-        cgCounts++;
-        //std::cout << "delta0:   " << delta0 << "      deltaN:   " << deltaN << "      iteration_counts:      " << cgCounts << std::endl;
-        //CUDA_SAFE_CALL(cudaMemset(pcg_data->q, 0, vertexNum * sizeof(double3)));
-        Solve_PCG_AX_B2(mesh, pcg_data->c, pcg_data->q, BH, vertexNum);
-        double tempSum = My_PCG_add_Reduction_Algorithm(3, mesh, pcg_data, vertexNum);
-        double alpha = deltaN / tempSum;
-        deltaO = deltaN;
-        //deltaN = 0;
-        //CUDA_SAFE_CALL(cudaMemset(pcg_data->s, 0, vertexNum * sizeof(double3)));
-        deltaN = My_PCG_add_Reduction_Algorithm(4, mesh, pcg_data, vertexNum, alpha);
-        double rate = deltaN / deltaO;
-        PCG_FinalStep_UpdateC(mesh, pcg_data->c, pcg_data->s, rate, vertexNum);
-        //cudaDeviceSynchronize();
-    }
+    // while (cgCounts<30000 && deltaN > errorRate * delta0) {
+    //     cgCounts++;
+    //     //std::cout << "delta0:   " << delta0 << "      deltaN:   " << deltaN << "      iteration_counts:      " << cgCounts << std::endl;
+    //     //CUDA_SAFE_CALL(cudaMemset(pcg_data->q, 0, vertexNum * sizeof(double3)));
+    //     Solve_PCG_AX_B2(mesh, pcg_data->c, pcg_data->q, BH, vertexNum);
+    //     double tempSum = My_PCG_add_Reduction_Algorithm(3, mesh, pcg_data, vertexNum);
+    //     double alpha = deltaN / tempSum;
+    //     deltaO = deltaN;
+    //     //deltaN = 0;
+    //     //CUDA_SAFE_CALL(cudaMemset(pcg_data->s, 0, vertexNum * sizeof(double3)));
+    //     deltaN = My_PCG_add_Reduction_Algorithm(4, mesh, pcg_data, vertexNum, alpha);
+    //     double rate = deltaN / deltaO;
+    //     PCG_FinalStep_UpdateC(mesh, pcg_data->c, pcg_data->s, rate, vertexNum);
+    //     //cudaDeviceSynchronize();
+    // }
+    // CUDA_SAFE_CALL(cudaMemcpy(pcg_data->dx, pcg_data->b, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(pcg_data->dx, mesh->fb, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    // My_Negate_Double3_Arrary(pcg_data->dx, vertexNum);
     _mvDir = pcg_data->dx;
+    // _mvDir = pcg_data->b;
+
+    // double3* b_host = new double3[vertexNum];
+    // CUDA_SAFE_CALL(cudaMemcpy(b_host, pcg_data->b, vertexNum * sizeof(double3), cudaMemcpyDeviceToHost));
+    // for (int i = 0; i < 1; i++) {
+    //     std::cout << "b_host[" << i << "]:   " << b_host[i].x << "   " << b_host[i].y << "   " << b_host[i].z << std::endl;
+    // }
+
+
     //CUDA_SAFE_CALL(cudaMemcpy(pcg_data->z, _mvDir, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
-    printf("cg counts = %d\n", cgCounts);
-    if (cgCounts == 0) {
-        printf("indefinite exit\n");
-        exit(0);
-    }
+    // printf("cg counts = %d\n", cgCounts);
+    // if (cgCounts == 0) {
+    //     printf("indefinite exit\n");
+    //     exit(0);
+    // }
     return cgCounts;
 }
+
+
+void PNCG(device_TetraData* mesh, PCG_Data* pcg_data, const BHessian& BH, double3* _mvDir, int vertexNum, int tetrahedraNum, double IPC_dt, double meanVolumn, double threshold, int iter) {
+    // p_{k+1} = gradient
+    CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->g_k_1, (mesh)->fb, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    // y_{k} = g_{k+1} - g_{k}
+    My_Array_Subtract(pcg_data->g_k_1, pcg_data->g_k, pcg_data->y_k, vertexNum);
+    // p_{k+1} = p_{k}
+    CUDA_SAFE_CALL(cudaMemcpy(pcg_data->p_k_1, pcg_data->p_k, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+
+    // P = block diagonal{BH}
+    construct_P2(mesh, pcg_data->P, BH, vertexNum);
+
+    // r = g_{k+1}
+    CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->r, (pcg_data)->g_k_1, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    double alpha = 0;
+    // s = P * r = P * g_{k+1}
+    double deltaN = My_PCG_add_Reduction_Algorithm(4, mesh, pcg_data, vertexNum, alpha);
+    // p_{k+1} = s = P * g_{k+1}
+    CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->p_k_1, (pcg_data)->s, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    // My_Negate_Double3_Arrary(pcg_data->p_k_1, vertexNum);
+
+    // printf("iter: %d\n", iter);
+    if (iter == 0) {
+        // p_{k+1} = -s = -P * g_{k+1}
+        My_Negate_Double3_Arrary(pcg_data->p_k_1, vertexNum);
+    } else {
+
+        // a = g_{k+1} * p_{k+1} = g_{k+1} * P * g_{k+1}
+        double a = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->g_k_1, pcg_data->p_k_1, vertexNum);
+        // b = g_{k} * g_{k}
+        double b = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->g_k, pcg_data->g_k, vertexNum);
+        
+        double beta = a / b;
+
+        // p_{k+1} = - P * g_{k+1}
+        My_Negate_Double3_Arrary(pcg_data->p_k_1, vertexNum);
+
+        // p_{k+1} = -P * g_{k+1} + beta * p_{k}
+        PCG_FinalStep_UpdateC(mesh, pcg_data->p_k_1, pcg_data->p_k, beta, vertexNum);
+    }
+
+    CUDA_SAFE_CALL(cudaMemcpy(pcg_data->dx, pcg_data->p_k_1, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    My_Negate_Double3_Arrary(pcg_data->dx, vertexNum);
+    _mvDir = pcg_data->dx;
+
+
+    // double3* mvDir = new double3[vertexNum];
+    // CUDA_SAFE_CALL(cudaMemcpy(mvDir, pcg_data->p_k_1, vertexNum * sizeof(double3), cudaMemcpyDeviceToHost));
+    // for (int i = 0; i < 1; i++) {
+    //     std::cout << "mvDir[" << i << "]:   " << mvDir[i].x << "   " << mvDir[i].y << "   " << mvDir[i].z << std::endl;
+    // }
+
+
+    CUDA_SAFE_CALL(cudaMemcpy(pcg_data->g_k, pcg_data->g_k_1, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(pcg_data->p_k, pcg_data->p_k_1, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    // My_Negate_Double3_Arrary(pcg_data->p_k, vertexNum);
+
+
+
+
+
+    // CUDA_SAFE_CALL(cudaMemcpy(pcg_data->g_k_1, mesh->fb, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    // // My_Negate_Double3_Arrary(pcg_data->dx, vertexNum);
+    // _mvDir = pcg_data->g_k_1;
+
+}
+
 
 void PCG_Data::Malloc_DEVICE_MEM(const int& vertexNum, const int& tetrahedraNum) {
     //std::cout << vertexNum << std::endl;
@@ -1511,6 +1629,12 @@ void PCG_Data::Malloc_DEVICE_MEM(const int& vertexNum, const int& tetrahedraNum)
         CUDA_SAFE_CALL(cudaMalloc((void**)&filterTempVec3, vertexNum * sizeof(double3)));
     }
     CUDA_SAFE_CALL(cudaMemset(z, 0, vertexNum * sizeof(double3)));
+
+    CUDA_SAFE_CALL(cudaMalloc((void**)&p_k, vertexNum * sizeof(double3)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&p_k_1, vertexNum * sizeof(double3)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&g_k, vertexNum * sizeof(double3)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&g_k_1, vertexNum * sizeof(double3)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&y_k, vertexNum * sizeof(double3)));
 }
 
 void PCG_Data::FREE_DEVICE_MEM() {
@@ -1532,6 +1656,13 @@ void PCG_Data::FREE_DEVICE_MEM() {
     if (P_type == 1) {
         MP.FreeMAS();
     }
+
+    CUDA_SAFE_CALL(cudaFree(p_k));
+    CUDA_SAFE_CALL(cudaFree(p_k_1));
+    CUDA_SAFE_CALL(cudaFree(g_k));
+    CUDA_SAFE_CALL(cudaFree(g_k_1));
+    CUDA_SAFE_CALL(cudaFree(y_k));
+
 }
 
 void BHessian::updateDNum(const int& tri_Num, const int& tet_number, const uint32_t* cpNums, const uint32_t* last_cpNums, const int& tri_edge_number) {

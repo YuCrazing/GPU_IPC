@@ -4158,7 +4158,12 @@ void _calKineticGradient(double3* vertexes, double3* xTilta, double3* gradient, 
     double3 deltaX = __GEIGEN__::__minus(vertexes[idx], xTilta[idx]);
     //masses[idx] = 1;
     gradient[idx] = make_double3(deltaX.x * masses[idx], deltaX.y * masses[idx], deltaX.z * masses[idx]);
-    //printf("%f  %f  %f\n", gradient[idx].x, gradient[idx].y, gradient[idx].z);
+    // printf("%f  %f  %f\n", gradient[idx].x, gradient[idx].y, gradient[idx].z);
+    // printf("%f\n", masses[idx]);
+    // if (idx < 10) {
+    //     printf("%f  %f  %f %f\n", deltaX.x, deltaX.y, deltaX.z, masses[idx]);
+    //     // printf("%f  %f  %f %f\n", gradient[idx].x, gradient[idx].y, gradient[idx].z, masses[idx]);
+    // }
 }
 
 __global__
@@ -5321,6 +5326,10 @@ void _stepForward(double3* _vertexes, double3* _vertexesTemp, double3* _moveDir,
     if (abs(bType[idx]) != 1 || moveBoundary) {
         _vertexes[idx] = __GEIGEN__::__minus(_vertexesTemp[idx], __GEIGEN__::__s_vec_multiply(_moveDir[idx], alpha));
     }
+    // if (idx < 1) {
+    //     // printf("%d %f %f %f\n", idx, _vertexes[idx].x, _vertexes[idx].y, _vertexes[idx].z);
+    //     printf("%d %f %f %f\n", idx, _vertexes[idx].y, _moveDir[idx].y, alpha);
+    // }
 }
 
 __global__
@@ -6719,17 +6728,17 @@ double GIPC::computeEnergy(device_TetraData& TetMesh) {
 }
 
 int GIPC::calculateMovingDirection(device_TetraData& TetMesh, int cpNum, int preconditioner_type) {
-    if (!preconditioner_type) {
+    // if (!preconditioner_type) {
         return PCG_Process(&TetMesh, &pcg_data, BH, _moveDir, vertexNum, tetrahedraNum, IPC_dt, meanVolumn, pcg_threshold);
-    }
-    else if (preconditioner_type == 1) {
-        int cgCount = MASPCG_Process(&TetMesh, &pcg_data, BH, _moveDir, vertexNum, tetrahedraNum, IPC_dt, meanVolumn, cpNum, pcg_threshold);
-        if (cgCount == 3000) {
-            printf("MASPCG fail, turn to PCG\n");
-            cgCount = PCG_Process(&TetMesh, &pcg_data, BH, _moveDir, vertexNum, tetrahedraNum, IPC_dt, meanVolumn, pcg_threshold);
-            printf("PCG finish:  %d\n", cgCount);
-        }
-    }
+    // }
+    // else if (preconditioner_type == 1) {
+    //     int cgCount = MASPCG_Process(&TetMesh, &pcg_data, BH, _moveDir, vertexNum, tetrahedraNum, IPC_dt, meanVolumn, cpNum, pcg_threshold);
+    //     if (cgCount == 3000) {
+    //         printf("MASPCG fail, turn to PCG\n");
+    //         cgCount = PCG_Process(&TetMesh, &pcg_data, BH, _moveDir, vertexNum, tetrahedraNum, IPC_dt, meanVolumn, pcg_threshold);
+    //         printf("PCG finish:  %d\n", cgCount);
+    //     }
+    // }
 }
 
 
@@ -6897,7 +6906,7 @@ void GIPC::postLineSearch(device_TetraData& TetMesh, double alpha)
 
         computeSelfCloseVal();
     }
-    //printf("------------------------------------------Kappa: %f\n", Kappa);
+    // printf("------------------------------------------Kappa: %f\n", Kappa);
 }
 
 void GIPC::tempMalloc_closeConstraint() {
@@ -6925,8 +6934,16 @@ int GIPC::solve_subIP(device_TetraData& TetMesh, double& time0, double& time1, d
 
     CUDA_SAFE_CALL(cudaMemset(_moveDir, 0, vertexNum * sizeof(double3)));
     //BH.MALLOC_DEVICE_MEM_O(tetrahedraNum, h_cpNum + 1, h_gpNum);
+
+
+    CUDA_SAFE_CALL(cudaMemcpy((&pcg_data)->g_k, (&TetMesh)->fb, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy((&pcg_data)->p_k, (&TetMesh)->fb, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+    // _moveDir = (&pcg_data)->dx;
+
+
+    int cg_in_newton = 0;
     double totalTimeStep = 0;
-    for (; k < iterCap; ++k) {
+    for (; k < 500; ++k) {
         totalCollisionPairs += h_cpNum[0];
         maxCOllisionPairNum = (maxCOllisionPairNum > h_cpNum[0]) ? maxCOllisionPairNum : h_cpNum[0];
         cudaEvent_t start, end0, end1 , end2, end3, end4;
@@ -6950,12 +6967,27 @@ int GIPC::solve_subIP(device_TetraData& TetMesh, double& time0, double& time1, d
         double distToOpt_PN = calcMinMovement(_moveDir, pcg_data.squeue, vertexNum);
 
         bool gradVanish = (distToOpt_PN < sqrt(Newton_solver_threshold*Newton_solver_threshold * bboxDiagSize2 * IPC_dt * IPC_dt));
-        if (k && gradVanish) {
-            break;
-        }
+        // if (k && gradVanish) {
+        //     printf("gradVanish\n");
+        //     break;
+        // }
         cudaEventRecord(end0);
-        total_Cg_count += calculateMovingDirection(TetMesh, h_cpNum[0], pcg_data.P_type);
+
+        // int cg_count = calculateMovingDirection(TetMesh, h_cpNum[0], pcg_data.P_type);
+        // cg_in_newton += cg_count;
+        // total_Cg_count += cg_count;
+
+        // CUDA_SAFE_CALL(cudaMemcpy((&pcg_data)->dx, (&TetMesh)->fb, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+        // _moveDir = (&pcg_data)->dx;
+
+        // CUDA_SAFE_CALL(cudaMemcpy((&pcg_data)->g_k_1, (&TetMesh)->fb, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+        // My_Array_Subtract(pcg_data.g_k_1, pcg_data.g_k, pcg_data.y_k, vertexNum);
+
+        PNCG(&TetMesh, &pcg_data, BH, _moveDir, vertexNum, tetrahedraNum, IPC_dt, meanVolumn, pcg_threshold, k);
+
         cudaEventRecord(end1);
+        // printf("cg_count:  %d\n", cg_count);
+        // printf("total_Cg_count:  %f\n", total_Cg_count);
         double alpha = 1.0, slackness_a = 0.8, slackness_m = 0.8;
 
         alpha = __m_min(alpha, ground_largestFeasibleStepSize(slackness_a, pcg_data.squeue));
@@ -6984,7 +7016,7 @@ int GIPC::solve_subIP(device_TetraData& TetMesh, double& time0, double& time1, d
         }
 
         cudaEventRecord(end2);
-        //printf("alpha:  %f\n", alpha);
+        // printf("alpha:  %f\n", alpha);
 
         bool isStop = lineSearch(TetMesh, alpha, alpha_CFL);
         cudaEventRecord(end3);
@@ -7016,13 +7048,26 @@ int GIPC::solve_subIP(device_TetraData& TetMesh, double& time0, double& time1, d
         totalTimeStep += alpha;
 
     }
+
+        double3 *temp_vertexes = new double3[vertexNum];
+        // CUDA_SAFE_CALL(cudaMalloc((void**)&temp_vertexes, vertexNum * sizeof(double3)));
+        CUDA_SAFE_CALL(cudaMemcpy(temp_vertexes, TetMesh.vertexes, vertexNum * sizeof(double3), cudaMemcpyDeviceToHost));
+        for(int i = 0; i < 1; i++) {
+            printf("vertexes[%d]:  %f, %f, %f\n", i, temp_vertexes[i].x, temp_vertexes[i].y, temp_vertexes[i].z);
+        }
+
+
+    // printf("cg_in_newton:  %d\n", cg_in_newton);
     //iterV.push_back(k);
     //std::ofstream outiter("iterCount.txt");
     //for (int ii = 0;ii < iterV.size();ii++) {
     //    outiter << iterV[ii] << std::endl;
     //}
     //outiter.close();
-    printf("\n\n      Kappa: %f                               iteration k:  %d\n\n\n", Kappa, k);
+    // printf("\n\n      Kappa: %f                               iteration k:  %d\n\n\n", Kappa, k);
+    static int maxIter = 0;
+    maxIter = (maxIter > k) ? maxIter : k;
+    printf("maxIter:  %d\n", maxIter);
     return k;
    
 }

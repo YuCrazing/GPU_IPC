@@ -24,6 +24,7 @@
 #include "gpu_eigen_libs.cuh"
 #include "fem_parameters.h"
 #include "gipc_path.h"
+#include "math.h"
 
 
 int collision_detection_buff_scale = 1;
@@ -604,7 +605,7 @@ void LoadSettings() {
 #ifdef _WIN32
 	string DEFAULT_CONFIG_FILE = std::string{ gipc::assets_dir() } + "scene/windows/parameterSetting.txt";
 #else
-	string DEFAULT_CONFIG_FILE = "../GPU_IPC/mLBVH/scene/parameterSetting.txt";
+	string DEFAULT_CONFIG_FILE = "../Assets/scene/linux/parameterSetting.txt";
 #endif
 
 
@@ -616,19 +617,21 @@ void LoadSettings() {
 
 		// global settings:
 		infile >> ignoreToken >> ipc.density;
+		std::cout << "ipc.density: " << ipc.density << std::endl;
 		infile >> ignoreToken >> ipc.YoungModulus;
 		infile >> ignoreToken >> ipc.PoissonRate;
 		infile >> ignoreToken >> ipc.frictionRate;
 		infile >> ignoreToken >> ipc.clothThickness;
 		infile >> ignoreToken >> ipc.clothYoungModulus;
-		//infile >> ignoreToken >> ipc.shearStiff;
+		infile >> ignoreToken >> ipc.shearStiff;
 		infile >> ignoreToken >> ipc.clothDensity;
 		infile >> ignoreToken >> ipc.softMotionRate;
-		//infile >> ignoreToken >> ipc.bendStiff;
+		infile >> ignoreToken >> ipc.bendStiff;
 		infile >> ignoreToken >> collision_detection_buff_scale;
 		infile >> ignoreToken >> motion_rate;
 		infile >> ignoreToken >> ipc.IPC_dt;
 		infile >> ignoreToken >> ipc.pcg_threshold;
+		std::cout << "ipc.pcg_threshold: " << ipc.pcg_threshold << std::endl;
 		infile >> ignoreToken >> ipc.Newton_solver_threshold;
 		infile >> ignoreToken >> ipc.relative_dhat;
 
@@ -660,9 +663,9 @@ void initScene1() {
 	auto assets_dir = std::string{ gipc::assets_dir() };
 
     tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, 0.65, 0));
+        assets_dir + "tetMesh/bunny.msh", 0.2, make_double3(0, 0.65, 0));
     tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, -0, 0));
+        assets_dir + "tetMesh/bunny.msh", 0.2, make_double3(0, -0, 0));
 
 
 	tetMesh.getSurface();

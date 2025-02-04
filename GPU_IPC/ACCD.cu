@@ -8,7 +8,8 @@
 
 #include "ACCD.cuh"
 #include "gpu_eigen_libs.cuh"
-#include <cmath>
+#include <math.h>
+// #include <cmath>
 #include <stdio.h>
 template <class F>
 __device__ __host__
