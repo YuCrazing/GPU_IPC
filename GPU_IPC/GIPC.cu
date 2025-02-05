@@ -6943,7 +6943,7 @@ int GIPC::solve_subIP(device_TetraData& TetMesh, double& time0, double& time1, d
 
     int cg_in_newton = 0;
     double totalTimeStep = 0;
-    for (; k < 500; ++k) {
+    for (; k < 100; ++k) {
         totalCollisionPairs += h_cpNum[0];
         maxCOllisionPairNum = (maxCOllisionPairNum > h_cpNum[0]) ? maxCOllisionPairNum : h_cpNum[0];
         cudaEvent_t start, end0, end1 , end2, end3, end4;
@@ -6983,12 +6983,12 @@ int GIPC::solve_subIP(device_TetraData& TetMesh, double& time0, double& time1, d
         // CUDA_SAFE_CALL(cudaMemcpy((&pcg_data)->g_k_1, (&TetMesh)->fb, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
         // My_Array_Subtract(pcg_data.g_k_1, pcg_data.g_k, pcg_data.y_k, vertexNum);
 
-        PNCG(&TetMesh, &pcg_data, BH, _moveDir, vertexNum, tetrahedraNum, IPC_dt, meanVolumn, pcg_threshold, k);
+        double alpha_candidate = PNCG(&TetMesh, &pcg_data, BH, _moveDir, vertexNum, tetrahedraNum, IPC_dt, meanVolumn, pcg_threshold, k);
 
         cudaEventRecord(end1);
         // printf("cg_count:  %d\n", cg_count);
         // printf("total_Cg_count:  %f\n", total_Cg_count);
-        double alpha = 1.0, slackness_a = 0.8, slackness_m = 0.8;
+        double alpha = alpha_candidate, slackness_a = 0.8, slackness_m = 0.8;
 
         alpha = __m_min(alpha, ground_largestFeasibleStepSize(slackness_a, pcg_data.squeue));
         //alpha = __m_min(alpha, InjectiveStepSize(0.2, 1e-6, pcg_data.squeue, TetMesh.tetrahedras));

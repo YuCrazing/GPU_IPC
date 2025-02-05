@@ -63,6 +63,7 @@ public:
 	double3* g_k;
 	double3* g_k_1;
 	double3* y_k;
+	double3* P_y_k;
 
 	int P_type;
 
@@ -71,7 +72,7 @@ public:
 	void FREE_DEVICE_MEM();
 };
 
-void PNCG(device_TetraData* mesh, PCG_Data* pcg_data, const BHessian& BH, double3* _mvDir, int vertexNum, int tetrahedraNum, double IPC_dt, double meanVolumn, double threshold, int iter);
+double PNCG(device_TetraData* mesh, PCG_Data* pcg_data, const BHessian& BH, double3* _mvDir, int vertexNum, int tetrahedraNum, double IPC_dt, double meanVolumn, double threshold, int iter);
 int PCG_Process(device_TetraData* mesh, PCG_Data* pcg_data, const BHessian& BH, double3* _mvDir, int vertexNum, int tetrahedraNum, double IPC_dt, double meanVolumn, double threshold);
 int MASPCG_Process(device_TetraData* mesh, PCG_Data* pcg_data, const BHessian& BH, double3* _mvDir, int vertexNum, int tetrahedraNum, double IPC_dt, double meanVolumn, int cpNum, double threshold);
 #endif // ! _PCG_SOLVER_CUH_
