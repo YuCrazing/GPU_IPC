@@ -662,10 +662,13 @@ void initScene1() {
 
 	auto assets_dir = std::string{ gipc::assets_dir() };
 
+    // tetMesh.load_tetrahedraMesh( 
+    //     assets_dir + "tetMesh/bunny.msh", 0.2, make_double3(0, 0.65, 0));
+    // tetMesh.load_tetrahedraMesh(
+    //     assets_dir + "tetMesh/bunny.msh", 0.2, make_double3(0, -0, 0));
+
     tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/bunny.msh", 0.2, make_double3(0, 0.65, 0));
-    tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/bunny.msh", 0.2, make_double3(0, -0, 0));
+        assets_dir + "tetMesh/cube.msh", 0.5, make_double3(0, -0, 0));
 
 
 	tetMesh.getSurface();
