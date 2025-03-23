@@ -1553,44 +1553,73 @@ double PNCG(device_TetraData* mesh, PCG_Data* pcg_data, const BHessian& BH, doub
     // P = block diagonal{BH}
     construct_P2(mesh, pcg_data->P, BH, vertexNum);
 
+    // P_g_k_1 = P * g_{k+1}
     {
         // r = g_{k+1}
         CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->r, (pcg_data)->g_k_1, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
         double alpha = 0;
         // s = P * r = P * g_{k+1}
         double deltaN = My_PCG_add_Reduction_Algorithm(4, mesh, pcg_data, vertexNum, alpha);
-        // p_{k+1} = s = P * g_{k+1}
-        CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->p_k_1, (pcg_data)->s, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+        // P_g_k_1 = s = P * g_{k+1}
+        CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->P_g_k_1, (pcg_data)->s, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
     }
 
     // printf("iter: %d\n", iter);
     if (iter == 0) {
         // p_{k+1} = -s = -P * g_{k+1}
+        CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->p_k_1, (pcg_data)->P_g_k_1, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
         My_Negate_Double3_Arrary(pcg_data->p_k_1, vertexNum);
     } else {
 
-        // P_y_k = P * y_{k}
+        double beta = 0;
+        // DK
         {
-            // r = y_{k}
-            CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->r, (pcg_data)->y_k, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
-            double alpha = 0;
-            // s = P * r = P * y_{k}
-            double deltaN = My_PCG_add_Reduction_Algorithm(4, mesh, pcg_data, vertexNum, alpha);
-            // P_y_k = s = P * y_{k}
-            CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->P_y_k, (pcg_data)->s, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+            // // P_y_k = P * y_{k}
+            // {
+            //     // r = y_{k}
+            //     CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->r, (pcg_data)->y_k, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+            //     double alpha = 0;
+            //     // s = P * r = P * y_{k}
+            //     double deltaN = My_PCG_add_Reduction_Algorithm(4, mesh, pcg_data, vertexNum, alpha);
+            //     // P_y_k = s = P * y_{k}
+            //     CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->P_y_k, (pcg_data)->s, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+            // }
+
+            // // a = (g_{k+1} * P_y_k) - (y_{k} * P_y_k) * (p_{k} * g_{k+1})
+            // double A = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->g_k_1, pcg_data->P_y_k, vertexNum);
+            // double B = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->y_k, pcg_data->P_y_k, vertexNum);
+            // double C = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->p_k, pcg_data->g_k_1, vertexNum);
+            // double a = A - B * C;
+            // // b = y_{k} * p_{k}
+            // double b = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->y_k, pcg_data->p_k, vertexNum);
+            // beta = a / b;
         }
 
-        // a = (g_{k+1} * P_y_k) - (y_{k} * P_y_k) * (p_{k} * g_{k+1})
-        double A = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->g_k_1, pcg_data->P_y_k, vertexNum);
-        double B = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->y_k, pcg_data->P_y_k, vertexNum);
-        double C = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->p_k, pcg_data->g_k_1, vertexNum);
-        double a = A - B * C;
-        // b = y_{k} * p_{k}
-        double b = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->y_k, pcg_data->p_k, vertexNum);
-        
-        double beta = a / b;
+        // FR 
+        {
+            // a = g_{k+1} * P * g_{k+1}
+            double a = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->g_k_1, pcg_data->P_g_k_1, vertexNum);
+
+            // P_g_k = P * g_{k}
+            {
+                // r = g_{k}
+                CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->r, (pcg_data)->g_k, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+                double alpha = 0;
+                // s = P * r = P * g_{k}
+                double deltaN = My_PCG_add_Reduction_Algorithm(4, mesh, pcg_data, vertexNum, alpha);
+                // P_g_k = s = P * g_{k}
+                CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->P_g_k, (pcg_data)->s, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
+            }
+
+            // b = g_{k} * P * g_{k}
+            double b = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->g_k, pcg_data->P_g_k, vertexNum);
+            beta = a / b;
+
+            beta = std::max(0.0, beta);
+        }
 
         // p_{k+1} = - P * g_{k+1}
+        CUDA_SAFE_CALL(cudaMemcpy((pcg_data)->p_k_1, (pcg_data)->P_g_k_1, vertexNum * sizeof(double3), cudaMemcpyDeviceToDevice));
         My_Negate_Double3_Arrary(pcg_data->p_k_1, vertexNum);
 
         // p_{k+1} = -P * g_{k+1} + beta * p_{k}
@@ -1602,7 +1631,7 @@ double PNCG(device_TetraData* mesh, PCG_Data* pcg_data, const BHessian& BH, doub
     double a = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->g_k_1, pcg_data->p_k_1, vertexNum);
     double b = My_PCG_General_v_v_Reduction_Algorithm(mesh, pcg_data, pcg_data->p_k_1, pcg_data->q, vertexNum);
     double alpha = - a / b;
-    printf("alpha: %f\n", alpha);
+    // printf("alpha: %f\n", alpha);
     if (alpha < 0) {
         alpha = 1;
     }
@@ -1662,6 +1691,8 @@ void PCG_Data::Malloc_DEVICE_MEM(const int& vertexNum, const int& tetrahedraNum)
     CUDA_SAFE_CALL(cudaMalloc((void**)&g_k_1, vertexNum * sizeof(double3)));
     CUDA_SAFE_CALL(cudaMalloc((void**)&y_k, vertexNum * sizeof(double3)));
     CUDA_SAFE_CALL(cudaMalloc((void**)&P_y_k, vertexNum * sizeof(double3)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&P_g_k, vertexNum * sizeof(double3)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&P_g_k_1, vertexNum * sizeof(double3)));
 }
 
 void PCG_Data::FREE_DEVICE_MEM() {
@@ -1690,6 +1721,8 @@ void PCG_Data::FREE_DEVICE_MEM() {
     CUDA_SAFE_CALL(cudaFree(g_k_1));
     CUDA_SAFE_CALL(cudaFree(y_k));
     CUDA_SAFE_CALL(cudaFree(P_y_k));
+    CUDA_SAFE_CALL(cudaFree(P_g_k));
+    CUDA_SAFE_CALL(cudaFree(P_g_k_1));
 
 }
 

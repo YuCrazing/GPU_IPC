@@ -64,6 +64,8 @@ public:
 	double3* g_k_1;
 	double3* y_k;
 	double3* P_y_k;
+	double3* P_g_k_1;
+	double3* P_g_k;
 
 	int P_type;
 
