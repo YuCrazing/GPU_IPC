@@ -58,12 +58,12 @@ float window_height = 1000;
 int   s_dimention   = 3;
 bool  saveSurface   = false;
 bool  change        = false;
-bool  screenshot    = false;
+bool  screenshot    = true;
 
 bool drawbvh     = false;
 bool drawSurface = true;
 
-bool    stop        = true;
+bool    stop        = false;
 int     totalFrames = 50;
 double3 center;
 double3 Ssize;
@@ -555,6 +555,34 @@ void initFEM(tetrahedra_obj& mesh)
     //   }
 
 
+
+    double maxy = 0;
+    for (int j = 0; j < mesh.vertexNum; j++)
+    {
+
+        if (mesh.vertexes[j].y > maxy)
+        {
+            maxy = mesh.vertexes[j].y;
+        }
+
+        //  if((mesh.vertexes[j].y < global_offset + 1))
+        {
+            if ((mesh.vertexes[j].x) > 3 * 0.5 - 1e-4 && (mesh.vertexes[j].y) > 2.5 - 1e-4)
+            {
+                mesh.boundaryTypies[j] = 1;
+                __GEIGEN__::__init_Mat3x3(mesh.constraints[j], 0);
+            }
+            if ((mesh.vertexes[j].x) < -3 * 0.5 + 1e-4 && (mesh.vertexes[j].y) > 2.5 - 1e-4)
+            {
+                mesh.boundaryTypies[j] = 1;
+                __GEIGEN__::__init_Mat3x3(mesh.constraints[j], 0);
+            }
+
+        }
+    }
+
+    printf("maxy:   %f\n", maxy);
+
     for(int i = 0; i < mesh.tetrahedraNum; i++)
     {
         __GEIGEN__::Matrix3x3d DM;
@@ -624,10 +652,10 @@ void DefaultSettings()
     collision_detection_buff_scale = 2;
     motion_rate                    = 1;
     //ipc.bendStiff = 3e-4;
-    ipc.Newton_solver_threshold = 1e-2;
+    ipc.Newton_solver_threshold = 2e-3;
     ipc.pcg_threshold           = 1e-4;
     ipc.IPC_dt                  = 1e-2;
-    ipc.relative_dhat           = 1e-3;
+    ipc.relative_dhat           = 2e-3;
     ipc.bendStiff = ipc.clothYoungModulus * pow(ipc.clothThickness, 3)
                     / (24 * (1 - ipc.PoissonRate * ipc.PoissonRate));
     //ipc.shearStiff = 0.03 * ipc.stretchStiff;
@@ -697,9 +725,9 @@ void initScene1(int argc, char** argv)
     auto assets_dir = std::string{gipc::assets_dir()};
     //string filePath(scene_file_path);
     tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, 0.65, 0));
+        assets_dir + "tetMesh/bunny2.msh", 0.5, make_double3(-0.25, -1.2, -0.1));
     tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, -0, 0));
+        assets_dir + "tetMesh/bunny2.msh", 0.5, make_double3(0, 0.5, 0));
     //tetMesh.load_triMesh(assets_dir + filePath, 1, make_double3(0, -0, 0), 0);
     //tetMesh.boundaryTypies[0] = 1;
     //__GEIGEN__::__set_Mat_val(tetMesh.constraints[0], 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -980,10 +1008,10 @@ void display(void)
         //saveSurface = !saveSurface;
     }
 
-    //if(step >= totalFrames)
-    //{
-    //    exit(0);
-    //}
+    if(step > 100)
+    {
+       exit(0);
+    }
 }
 
 void init(int argc, char** argv)
