@@ -734,6 +734,8 @@ void initScene1(int argc, char** argv)
     //tetMesh.constraints[0] =
     tetMesh.getSurface();
 
+    std::cout << "ipc.YoungModulus: " << ipc.YoungModulus << std::endl;
+
     initFEM(tetMesh);
     //device_TetraData d_tetMesh;
     d_tetMesh.Malloc_DEVICE_MEM(tetMesh.vertexNum,
