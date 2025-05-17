@@ -56,7 +56,7 @@ float yRotLength    = 0.0f;
 float window_width  = 1000;
 float window_height = 1000;
 int   s_dimention   = 3;
-bool  saveSurface   = false;
+bool  saveSurface   = true;
 bool  change        = false;
 bool  screenshot    = true;
 
@@ -652,10 +652,10 @@ void DefaultSettings()
     collision_detection_buff_scale = 2;
     motion_rate                    = 1;
     //ipc.bendStiff = 3e-4;
-    ipc.Newton_solver_threshold = 2e-3;
+    // ipc.Newton_solver_threshold = 1e-3;
     ipc.pcg_threshold           = 1e-4;
     ipc.IPC_dt                  = 1e-2;
-    ipc.relative_dhat           = 2e-3;
+    ipc.relative_dhat           = 1e-3;
     ipc.bendStiff = ipc.clothYoungModulus * pow(ipc.clothThickness, 3)
                     / (24 * (1 - ipc.PoissonRate * ipc.PoissonRate));
     //ipc.shearStiff = 0.03 * ipc.stretchStiff;

@@ -10,5 +10,5 @@ collision_detection_buff_scale                1
 motion_rate									  1
 ipc_time_step                                 0.01
 pcg_solver_threshold                          1e-4
-Newton_solver_threshold                       1e-2
+Newton_solver_threshold                       1e-3
 IPC_ralative_dHat                             1e-3

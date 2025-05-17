@@ -10160,6 +10160,19 @@ int              GIPC::solve_subIP(device_TetraData& TetMesh,
 {
     int iterCap = 10000, k = 0;
 
+    static int frame_count = 0;
+    frame_count++;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_, end_;
+    int t_frame = 60;
+    if(frame_count == t_frame)
+    {
+        Newton_solver_threshold = 1e-20;
+        iterCap = 100;
+        start_ = std::chrono::high_resolution_clock::now();
+        // std::cout << "iterCap: " << iterCap << std::endl;
+    }
+
     CUDA_SAFE_CALL(cudaMemset(_moveDir, 0, vertexNum * sizeof(double3)));
     //BH.MALLOC_DEVICE_MEM_O(tetrahedraNum, h_cpNum + 1, h_gpNum);
     double totalTimeStep = 0;
@@ -10187,8 +10200,18 @@ int              GIPC::solve_subIP(device_TetraData& TetMesh,
 
         double distToOpt_PN = calcMinMovement(_moveDir, pcg_data.squeue, vertexNum);
 
+        // if(frame_count == t_frame) {
+        //     std::cout << distToOpt_PN << "," << std::endl;
+        // }
+
         bool gradVanish = (distToOpt_PN < sqrt(Newton_solver_threshold * Newton_solver_threshold
                                                * bboxDiagSize2 * IPC_dt * IPC_dt));
+
+
+        // std::cout << "Newton_solver_threshold: " << Newton_solver_threshold << std::endl;
+        // std::cout << "bboxDiagSize2: " << bboxDiagSize2 << std::endl;
+        // std::cout << "IPC_dt: " << IPC_dt << std::endl;
+
         if(k && gradVanish)
         {
             break;
@@ -10258,6 +10281,17 @@ int              GIPC::solve_subIP(device_TetraData& TetMesh,
         (cudaEventDestroy(end3));
         (cudaEventDestroy(end4));
         totalTimeStep += alpha;
+
+
+        if(frame_count == t_frame)
+        {
+            end_ = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed = end_ - start_;
+            double total_time = elapsed.count();
+            std::cout << total_time << "," << std::endl;
+            // std::cout << name_ << " took " << total_time << "s" << std::endl;
+        }
+
     }
     //iterV.push_back(k);
     //std::ofstream outiter("iterCount.txt");
@@ -10266,6 +10300,10 @@ int              GIPC::solve_subIP(device_TetraData& TetMesh,
     //}
     //outiter.close();
     printf("\n\n      Kappa: %f                               iteration k:  %d\n\n\n", Kappa, k);
+
+    if(frame_count == t_frame) {
+        exit(1);
+    }
     return k;
 }
 
