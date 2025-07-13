@@ -1,0 +1,13 @@
+time0: 22.7456
+time1: 85.9839
+time2: 2.44822
+time3: 7.9924
+time4: 0.0341789
+time_makePD: 0
+totalTime: 122.372
+total iter: 838
+frames: 101
+totalCollisionNum: 1.38687e+06
+averageCollision: 1654.98
+maxCOllisionPairNum: 4467
+totalCgTime: 28259

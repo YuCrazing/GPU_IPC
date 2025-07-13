@@ -1,5 +1,5 @@
 volume_mesh_density                           1000
-volume_mesh_YoungsModulus                     1e5
+volume_mesh_YoungsModulus                     1e6
 poisson_rate                                  0.49
 friction_rate                                 0.4
 triangle(cloth)_mesh_thickness                0.001
@@ -9,6 +9,6 @@ motion_stiffness                              1
 collision_detection_buff_scale                1
 motion_rate									  1
 ipc_time_step                                 0.01
-pcg_solver_threshold                          1e-4
-Newton_solver_threshold                       1e-3
-IPC_ralative_dHat                             1e-3
+pcg_solver_threshold                          1e-5
+Newton_solver_threshold                       5e-4
+IPC_ralative_dHat                             2e-3

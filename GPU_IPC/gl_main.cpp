@@ -653,9 +653,9 @@ void DefaultSettings()
     motion_rate                    = 1;
     //ipc.bendStiff = 3e-4;
     ipc.Newton_solver_threshold = 2e-3;
-    ipc.pcg_threshold           = 1e-4;
+    ipc.pcg_threshold           = 1e-6;
     ipc.IPC_dt                  = 1e-2;
-    ipc.relative_dhat           = 2e-3;
+    ipc.relative_dhat           = 1e-5;
     ipc.bendStiff = ipc.clothYoungModulus * pow(ipc.clothThickness, 3)
                     / (24 * (1 - ipc.PoissonRate * ipc.PoissonRate));
     //ipc.shearStiff = 0.03 * ipc.stretchStiff;
@@ -724,8 +724,8 @@ void initScene1(int argc, char** argv)
 
     auto assets_dir = std::string{gipc::assets_dir()};
     //string filePath(scene_file_path);
-    tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/bunny2.msh", 0.5, make_double3(-0.25, -1.2, -0.1));
+    // tetMesh.load_tetrahedraMesh(
+    //     assets_dir + "tetMesh/bunny2.msh", 0.5, make_double3(-0.25, -1.2, -0.1));
     tetMesh.load_tetrahedraMesh(
         assets_dir + "tetMesh/bunny2.msh", 0.5, make_double3(0, 0.5, 0));
     //tetMesh.load_triMesh(assets_dir + filePath, 1, make_double3(0, -0, 0), 0);
