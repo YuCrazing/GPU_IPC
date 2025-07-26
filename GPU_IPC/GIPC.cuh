@@ -188,6 +188,7 @@ public:
 	double2 minMaxSelfDist();
 
 	void updateVelocities(device_TetraData& TetMesh);
+	void updateClothEdge(device_TetraData& TetMesh);
 	void updateBoundary(device_TetraData& TetMesh, double alpha);
 	void updateBoundaryMoveDir(device_TetraData& TetMesh, double alpha);
     void updateBoundary2(device_TetraData& TetMesh);

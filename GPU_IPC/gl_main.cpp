@@ -726,9 +726,23 @@ void initScene1(int argc, char** argv)
     //string filePath(scene_file_path);
     // tetMesh.load_tetrahedraMesh(
     //     assets_dir + "tetMesh/bunny2.msh", 0.5, make_double3(-0.25, -1.2, -0.1));
-    tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/bunny2.msh", 0.5, make_double3(0, 0.5, 0));
-    //tetMesh.load_triMesh(assets_dir + filePath, 1, make_double3(0, -0, 0), 0);
+    // tetMesh.load_tetrahedraMesh(
+    //     assets_dir + "tetMesh/bunny2.msh", 0.5, make_double3(0, 0.5, 0));
+    tetMesh.load_triMesh(assets_dir + "triMesh/tricloth_40k.obj", 1, make_double3(0, -0, 0), 0);
+    // tetMesh.load_triMesh(assets_dir + "triMesh/tricloth_reorder.obj", 1, make_double3(0, -0, 0), 0);
+    int n=201;
+    for(int i = 0; i < tetMesh.vertexNum; i++)
+    {
+        if(i < n || i > tetMesh.vertexNum - 1 - n) {
+            tetMesh.boundaryTypies[i] = 1;
+        }
+        // if(tetMesh.vertexes[i].x < 0.5) {
+        //     tetMesh.boundaryTypies[i] = 1;
+        // }
+        // tetMesh.masses[i] = ipc.clothDensity * ipc.clothThickness / 3;
+        // tetMesh.velocities[i] = make_double3(0, 0, 0);
+        // tetMesh.constraints[i] = __GEIGEN__::__Matrix3x3d_zero();
+    }
     //tetMesh.boundaryTypies[0] = 1;
     //__GEIGEN__::__set_Mat_val(tetMesh.constraints[0], 0, 0, 0, 0, 0, 0, 0, 0, 0);
     //tetMesh.constraints[0] =
@@ -848,7 +862,7 @@ void initScene1(int argc, char** argv)
            ipc.MAX_COLLITION_PAIRS_NUM);
 
     //ipc.USE_MAS = false;
-    ipc.pcg_data.P_type = 1;
+    ipc.pcg_data.P_type = 0;
     ipc.MALLOC_DEVICE_MEM();
 
     CUDA_SAFE_CALL(cudaMemcpy(
@@ -997,7 +1011,7 @@ void display(void)
         SaveScreenShot(window_width, window_height, file_path);
     }
     step++;
-    if(saveSurface)
+    if(1)
     {
         
 
@@ -1012,7 +1026,7 @@ void display(void)
 
     if(step > 100)
     {
-       exit(0);
+    //    exit(0);
     }
 }
 

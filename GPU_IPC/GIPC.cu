@@ -7912,6 +7912,164 @@ __global__ void _updateVelocities(double3* _vertexes,
     }
 }
 
+
+namespace Helper
+{
+    __host__ __device__ inline double3 make_double3(double x, double y, double z)
+    {
+        double3 v; v.x = x; v.y = y; v.z = z; return v;
+    }
+    
+    __host__ __device__ inline double3 operator-(const double3& a, const double3& b)
+    {
+        return make_double3(a.x - b.x, a.y - b.y, a.z - b.z);
+    }
+    
+    __host__ __device__ inline double dot(const double3& a, const double3& b)
+    {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+    
+    __host__ __device__ inline double3 cross(const double3& a, const double3& b)
+    {
+        return make_double3(
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+        );
+    }
+    
+    __host__ __device__ inline double3 normalize(const double3& v)
+    {
+        double len = sqrt(dot(v, v));
+        return make_double3(v.x / len, v.y / len, v.z / len);
+    }
+    
+    /* ────────────────────────────────────────────────────────── *
+     |  3×3 矩阵（行主序）                                        |
+     * ────────────────────────────────────────────────────────── */
+    struct mat3
+    {
+        double m[3][3];   // m[row][col]
+    
+        __host__ __device__       double* operator[](int r)       { return m[r]; }
+        __host__ __device__ const double* operator[](int r) const { return m[r]; }
+    };
+    
+    /* ────────────────────────────────────────────────────────── *
+     |  Rodrigues 旋转矩阵                                        |
+     * ────────────────────────────────────────────────────────── */
+    __host__ __device__ inline mat3 rotate(double angle, const double3& axis_)
+    {
+        double3 u = normalize(axis_);
+        double  s = sin(angle);
+        double  c = cos(angle);
+        double  t = 1.0 - c;
+    
+        mat3 R;
+        R[0][0] = t * u.x * u.x + c;
+        R[0][1] = t * u.x * u.y - s * u.z;
+        R[0][2] = t * u.x * u.z + s * u.y;
+    
+        R[1][0] = t * u.x * u.y + s * u.z;
+        R[1][1] = t * u.y * u.y + c;
+        R[1][2] = t * u.y * u.z - s * u.x;
+    
+        R[2][0] = t * u.x * u.z - s * u.y;
+        R[2][1] = t * u.y * u.z + s * u.x;
+        R[2][2] = t * u.z * u.z + c;
+    
+        return R;
+    }
+    
+    /* ────────────────────────────────────────────────────────── *
+     |  mat3 × double3                                           |
+     * ────────────────────────────────────────────────────────── */
+    
+    /* 右乘：v' = M * v */
+    __host__ __device__
+    inline double3 operator*(const mat3& M, const double3& v)
+    {
+        return make_double3(
+            M[0][0] * v.x + M[0][1] * v.y + M[0][2] * v.z,
+            M[1][0] * v.x + M[1][1] * v.y + M[1][2] * v.z,
+            M[2][0] * v.x + M[2][1] * v.y + M[2][2] * v.z
+        );
+    }
+    
+    /* 左乘（可选）：v' = vᵀ * M */
+    __host__ __device__
+    inline double3 operator*(const double3& v, const mat3& M)
+    {
+        return make_double3(
+            v.x * M[0][0] + v.y * M[1][0] + v.z * M[2][0],
+            v.x * M[0][1] + v.y * M[1][1] + v.z * M[2][1],
+            v.x * M[0][2] + v.y * M[1][2] + v.z * M[2][2]
+        );
+    }
+    
+}
+
+__global__ void _updateClothEdge(double3* _vertexes,
+                                  double3* _o_vertexes,
+                                  double3* _velocities,
+                                  int*     btype,
+                                  double   ipc_dt,
+                                  int      numbers)
+{
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(idx >= numbers)
+        return;
+    if(btype[idx] == 0)
+    {
+        // _velocities[idx] = __GEIGEN__::__s_vec_multiply(
+        //     __GEIGEN__::__minus(_vertexes[idx], _o_vertexes[idx]), 1 / ipc_dt);
+        // _o_vertexes[idx] = _vertexes[idx];
+    }
+    else //if(idx==4224)
+    {
+        int n = 201;
+        // double3 v = _vertexes[idx];
+        // printf("v: %f, %f, %f\n", v.x, v.y, v.z);
+        int middle_index = (n-1) / 2;
+        int axis_index_a = middle_index;
+        int axis_index_b = (n - 1) * n + middle_index;
+        double3 va = _vertexes[axis_index_a];
+        double3 vb = _vertexes[axis_index_b];
+        // printf("va: %f, %f, %f\n", va.x, va.y, va.z);
+        // printf("vb: %f, %f, %f\n", vb.x, vb.y, vb.z);
+        // printf("axis_index_a: %d, axis_index_b: %d\n", axis_index_a, axis_index_b);
+        double3 axis = __GEIGEN__::__normalized(__GEIGEN__::__minus(vb, va));
+        // printf("axis: %f, %f, %f\n", axis.x, axis.y, axis.z);
+        float speed = 0.001f;
+        Helper::mat3 rotation_positive = Helper::rotate( speed, axis);
+        Helper::mat3 rotation_negative = Helper::rotate(-speed, axis);
+
+        if (idx < n && idx != axis_index_a) {
+            int index = idx;
+            double3 v = _vertexes[index];
+            // printf("v: %f, %f, %f\n", v.x, v.y, v.z);
+            double3 v_va = __GEIGEN__::__minus(v, va);
+            double3 v_rotated = rotation_positive * v_va;
+            v = __GEIGEN__::__add(v_rotated, va);
+            _vertexes[index] = v;
+
+        }
+        if(idx >=(n - 1)*n && idx != axis_index_b)
+        {
+            int index = idx;
+            double3 v = _vertexes[index];
+            // printf("v: %f, %f, %f\n", v.x, v.y, v.z);
+            double3 v_vb = __GEIGEN__::__minus(v, vb);
+            double3 v_rotated = rotation_negative * v_vb;
+            v = __GEIGEN__::__add(v_rotated, vb);
+            _vertexes[index] = v;
+        }
+        // _velocities[idx] = make_double3(0, 0, 0);
+        // _o_vertexes[idx] = _vertexes[idx];
+    }
+}
+
 __global__ void _updateBoundary(double3* _vertexes, int* _btype, double3* _moveDir, double ipc_dt, int numbers)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -10026,7 +10184,7 @@ bool GIPC::lineSearch(device_TetraData& TetMesh, double& alpha, const double& cf
     int numOfIntersect = 0;
     int insectNum      = 0;
 
-    bool checkInterset = true;
+    bool checkInterset = false;
 
     while(checkInterset && isIntersected(TetMesh))
     {
@@ -10158,7 +10316,7 @@ int              GIPC::solve_subIP(device_TetraData& TetMesh,
                       double&           time3,
                       double&           time4)
 {
-    int iterCap = 10000, k = 0;
+    int iterCap = 50, k = 0;
 
     CUDA_SAFE_CALL(cudaMemset(_moveDir, 0, vertexNum * sizeof(double3)));
     //BH.MALLOC_DEVICE_MEM_O(tetrahedraNum, h_cpNum + 1, h_gpNum);
@@ -10277,6 +10435,17 @@ void GIPC::updateVelocities(device_TetraData& TetMesh)
     const unsigned int threadNum = default_threads;
     int                blockNum  = (numbers + threadNum - 1) / threadNum;  //
     _updateVelocities<<<blockNum, threadNum>>>(
+        TetMesh.vertexes, TetMesh.o_vertexes, TetMesh.velocities, TetMesh.BoundaryType, IPC_dt, numbers);
+}
+
+void GIPC::updateClothEdge(device_TetraData& TetMesh)
+{
+    int                numbers   = vertexNum;
+    if(numbers < 1)
+        return;
+    const unsigned int threadNum = default_threads;
+    int                blockNum  = (numbers + threadNum - 1) / threadNum;  //
+    _updateClothEdge<<<blockNum, threadNum>>>(
         TetMesh.vertexes, TetMesh.o_vertexes, TetMesh.velocities, TetMesh.BoundaryType, IPC_dt, numbers);
 }
 
@@ -10532,6 +10701,8 @@ void   GIPC::IPC_Solver(device_TetraData& TetMesh)
     CUDA_SAFE_CALL(cudaFree(_collisonPairs_lastH_gd));
 #endif
 
+
+    updateClothEdge(TetMesh);
     updateVelocities(TetMesh);
 
     computeXTilta(TetMesh, 1);
