@@ -30,7 +30,8 @@ find_package(OpenGL REQUIRED)
 
 
 add_executable(gipc)
-target_compile_features(gipc PRIVATE cuda_std_17)
+# target_compile_features(gipc PRIVATE cuda_std_17)
+target_include_directories(gipc PRIVATE ${CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES})
 
 target_include_directories(gipc PRIVATE "GPU_IPC/")
 
@@ -50,14 +51,31 @@ target_compile_definitions(gipc PRIVATE USE_SNK SVD_DOUBLE ADAPTIVE_KAPPA)
 target_link_libraries(gipc PRIVATE cusparse cublas cusolver cudart_static)
 target_link_libraries(gipc PRIVATE GLUT::GLUT GLEW::GLEW OpenGL::GLU Eigen3::Eigen)
 
-target_compile_features(gipc PRIVATE cxx_std_17 cuda_std_17)
+# target_compile_features(gipc PRIVATE cxx_std_17 cuda_std_17)
 target_link_libraries(gipc PUBLIC CUDA::cuda_driver CUDA::cudart)
 
+# set_target_properties(gipc PROPERTIES
+#     CUDA_EXTENSIONS ON
+#     CUDA_SEPARABLE_COMPILATION ON
+#     CUDA_RESOLVE_DEVICE_SYMBOLS ON
+#     CUDA_ARCHITECTURES 60)
+
+# 使用目标属性统一设置语言标准和CUDA属性
 set_target_properties(gipc PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+
+    CUDA_STANDARD 17
+    CUDA_STANDARD_REQUIRED ON
     CUDA_EXTENSIONS ON
+    
     CUDA_SEPARABLE_COMPILATION ON
     CUDA_RESOLVE_DEVICE_SYMBOLS ON
-    CUDA_ARCHITECTURES 60)
+    
+    # 优先使用命令行传入的架构，如果未传入则为空
+    CUDA_ARCHITECTURES ${CMAKE_CUDA_ARCHITECTURES} 
+)
 
 target_compile_options(gipc
     PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: 
