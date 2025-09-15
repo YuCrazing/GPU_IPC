@@ -697,7 +697,7 @@ void initScene1(int argc, char** argv)
     auto assets_dir = std::string{gipc::assets_dir()};
     //string filePath(scene_file_path);
     tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/ball.msh", 0.5, make_double3(0, 0.65, 0));
+        assets_dir + "tetMesh/ball.msh", 0.3, make_double3(0, 0.4, 0));
     // tetMesh.load_tetrahedraMesh(
     //     assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, -0, 0));
     for (int i = 0; i < tetMesh.vertexNum; i++)
