@@ -56,15 +56,15 @@ float yRotLength    = 0.0f;
 float window_width  = 1000;
 float window_height = 1000;
 int   s_dimention   = 3;
-bool  saveSurface   = false;
+bool  saveSurface   = true;
 bool  change        = false;
 bool  screenshot    = false;
 
 bool drawbvh     = false;
 bool drawSurface = true;
 
-bool    stop        = true;
-int     totalFrames = 50;
+bool    stop        = false;
+int     totalFrames = 512;
 double3 center;
 double3 Ssize;
 
@@ -700,6 +700,7 @@ void initScene1(int argc, char** argv)
         assets_dir + "tetMesh/ball.msh", 0.3, make_double3(0, 0.4, 0));
     // tetMesh.load_tetrahedraMesh(
     //     assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, -0, 0));
+    std::cout << tetMesh.vertexNum << "  " << tetMesh.tetrahedraNum << std::endl;
     for (int i = 0; i < tetMesh.vertexNum; i++)
     {
         tetMesh.boundaryTypies[i] = 1;
@@ -985,10 +986,10 @@ void display(void)
         //saveSurface = !saveSurface;
     }
 
-    //if(step >= totalFrames)
-    //{
-    //    exit(0);
-    //}
+    if(step >= totalFrames)
+    {
+       exit(0);
+    }
 }
 
 void init(int argc, char** argv)
