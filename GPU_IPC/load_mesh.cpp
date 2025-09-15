@@ -481,10 +481,13 @@ bool tetrahedra_obj::load_tetrahedraMesh(const std::string& filename, double sca
                 vector<std::string> elementIndexex;
                 std::string         spacer = " ";
                 split(line, elementIndexex, spacer);
-                index0 = atoi(elementIndexex[3].c_str()) - 1;
-                index1 = atoi(elementIndexex[4].c_str()) - 1;
-                index2 = atoi(elementIndexex[5].c_str()) - 1;
-                index3 = atoi(elementIndexex[6].c_str()) - 1;
+                // msh format 2.2 could support multiple labels for one element
+                // we skip all labels here.
+                int index_base = atoi(elementIndexex[2].c_str());
+                index0 = atoi(elementIndexex[3+index_base].c_str()) - 1;
+                index1 = atoi(elementIndexex[4+index_base].c_str()) - 1;
+                index2 = atoi(elementIndexex[5+index_base].c_str()) - 1;
+                index3 = atoi(elementIndexex[6+index_base].c_str()) - 1;
 
                 uint4 tetrahedra;
                 tetrahedra.x = index0 + vertexOffset;

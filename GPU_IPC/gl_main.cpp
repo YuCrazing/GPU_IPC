@@ -697,10 +697,15 @@ void initScene1(int argc, char** argv)
     auto assets_dir = std::string{gipc::assets_dir()};
     //string filePath(scene_file_path);
     tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, 0.65, 0));
+        assets_dir + "tetMesh/ball.msh", 0.5, make_double3(0, 0.65, 0));
     // tetMesh.load_tetrahedraMesh(
     //     assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, -0, 0));
-    tetMesh.load_triMesh(assets_dir + "triMesh/tricloth.obj", 1, make_double3(0, -0, 0), 0);
+    for (int i = 0; i < tetMesh.vertexNum; i++)
+    {
+        tetMesh.boundaryTypies[i] = 1;
+        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
+    }
+    tetMesh.load_triMesh(assets_dir + "triMesh/grid_10x10.obj", 1, make_double3(0, -0, 0), 0);
     // tetMesh.boundaryTypies[0] = 1;
     //__GEIGEN__::__set_Mat_val(tetMesh.constraints[0], 0, 0, 0, 0, 0, 0, 0, 0, 0);
     //tetMesh.constraints[0] =
