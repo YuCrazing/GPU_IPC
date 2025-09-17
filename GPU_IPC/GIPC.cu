@@ -10362,7 +10362,7 @@ double ttime1       = 0;
 double ttime2       = 0;
 double ttime3       = 0;
 double ttime4       = 0;
-bool   isRotate     = true;
+bool   isRotate     = false;
 void   GIPC::IPC_Solver(device_TetraData& TetMesh)
 {
     //double animation_fullRate = 0;

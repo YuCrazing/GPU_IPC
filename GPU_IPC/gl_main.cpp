@@ -63,7 +63,7 @@ bool  screenshot    = false;
 bool drawbvh     = false;
 bool drawSurface = true;
 
-bool    stop        = false;
+bool    stop        = true;
 int     totalFrames = 51200000;
 double3 center;
 double3 Ssize;
@@ -696,32 +696,40 @@ void initScene1(int argc, char** argv)
 
     auto assets_dir = std::string{gipc::assets_dir()};
     //string filePath(scene_file_path);
-    // tetMesh.load_tetrahedraMesh(
-    //     assets_dir + "tetMesh/ball.msh", 0.3, make_double3(0, 0.4, 0));
+    tetMesh.load_tetrahedraMesh(
+        assets_dir + "tetMesh/ball.msh", 0.3, make_double3(0, 0.4, 0));
     // tetMesh.load_tetrahedraMesh(
     //     assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, -0, 0));
-    // std::cout << tetMesh.vertexNum << "  " << tetMesh.tetrahedraNum << std::endl;
-    // for (int i = 0; i < tetMesh.vertexNum; i++)
-    // {
-    //     tetMesh.boundaryTypies[i] = 1;
-    //     __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
-    // }
-    tetMesh.load_triMesh(assets_dir + "triMesh/grid_100x100.obj", 1, make_double3(0, -0, 0), 0);
-    int size = 100;
-    for (int i = 0; i < size; i++)
+    std::cout << tetMesh.vertexNum << "  " << tetMesh.tetrahedraNum << std::endl;
+    int collision_vn = tetMesh.vertexNum;
+    for (int i = 0; i < collision_vn; i++)
     {
-        // tetMesh.boundaryTypies[i] = 1;
-        // __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
-        // int j = tetMesh.vertexNum - 1 - i;
-        // tetMesh.boundaryTypies[j] = -1;
-        // __GEIGEN__::__init_Mat3x3(tetMesh.constraints[j], 0);
-
-        tetMesh.boundaryTypies[i*size] = 1;
-        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i*size], 0);
-        int j = (i+1)*size - 1;
-        tetMesh.boundaryTypies[j] = -1;
-        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[j], 0);
+        tetMesh.boundaryTypies[i] = 1;
+        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
     }
+    tetMesh.load_triMesh(assets_dir + "triMesh/grid_10x10.obj", 1, make_double3(0, 0, 0), 0);
+    for(int i = collision_vn; i < tetMesh.vertexNum; i++)
+    {
+        {
+            tetMesh.velocities[i] = make_double3(0, 0, 0);
+        }
+    }
+    // tetMesh.load_triMesh(assets_dir + "triMesh/Female_T-Shirt_4_merged_lying.obj", 1, make_double3(0, -0.9, 0), 0);
+    // int size = 100;
+    // for (int i = 0; i < size; i++)
+    // {
+    //     // tetMesh.boundaryTypies[i] = 1;
+    //     // __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
+    //     // int j = tetMesh.vertexNum - 1 - i;
+    //     // tetMesh.boundaryTypies[j] = -1;
+    //     // __GEIGEN__::__init_Mat3x3(tetMesh.constraints[j], 0);
+
+    //     tetMesh.boundaryTypies[i*size] = 1;
+    //     __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i*size], 0);
+    //     int j = (i+1)*size - 1;
+    //     tetMesh.boundaryTypies[j] = -1;
+    //     __GEIGEN__::__init_Mat3x3(tetMesh.constraints[j], 0);
+    // }
     // tetMesh.boundaryTypies[0] = 1;
     //__GEIGEN__::__set_Mat_val(tetMesh.constraints[0], 0, 0, 0, 0, 0, 0, 0, 0, 0);
     //tetMesh.constraints[0] =
@@ -877,11 +885,11 @@ void initScene1(int argc, char** argv)
     {
         if(ipc.animation)
         {
-            ipc.sortMesh(d_tetMesh, bodyVertOffset);
+            // ipc.sortMesh(d_tetMesh, bodyVertOffset);
         }
         else
         {
-            ipc.sortMesh(d_tetMesh, ipc.vertexNum);
+            // ipc.sortMesh(d_tetMesh, ipc.vertexNum);
         }
         CUDA_SAFE_CALL(cudaMemcpy(tetMesh.vertexes.data(),
                                   d_tetMesh.vertexes,
