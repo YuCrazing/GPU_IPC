@@ -431,9 +431,9 @@ bool tetrahedra_obj::load_tetrahedraMesh(const std::string& filename, double sca
                 y                  = atof(nodePos[2].c_str());
                 z                  = atof(nodePos[3].c_str());
                 double3 d_velocity = make_double3(0, 0, 0);
-                double3 vertex     = make_double3(scale * x - position_offset.x,
-                                              scale * y - position_offset.y,
-                                              scale * z - position_offset.z);
+                double3 vertex     = make_double3(scale * x + position_offset.x,
+                                              scale * y + position_offset.y,
+                                              scale * z + position_offset.z);
                 //Matrix3d Constraint; Constraint.setIdentity();
                 //Vector3d force = Vector3d(0, 0, 0);
                 double3 velocity     = make_double3(0, 0, 0);
