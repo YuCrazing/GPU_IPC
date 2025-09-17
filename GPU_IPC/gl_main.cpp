@@ -56,7 +56,7 @@ float yRotLength    = 0.0f;
 float window_width  = 1000;
 float window_height = 1000;
 int   s_dimention   = 3;
-bool  saveSurface   = true;
+bool  saveSurface   = false;
 bool  change        = false;
 bool  screenshot    = false;
 
@@ -64,7 +64,7 @@ bool drawbvh     = false;
 bool drawSurface = true;
 
 bool    stop        = false;
-int     totalFrames = 512;
+int     totalFrames = 51200000;
 double3 center;
 double3 Ssize;
 
@@ -696,17 +696,32 @@ void initScene1(int argc, char** argv)
 
     auto assets_dir = std::string{gipc::assets_dir()};
     //string filePath(scene_file_path);
-    tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/ball.msh", 0.3, make_double3(0, 0.4, 0));
+    // tetMesh.load_tetrahedraMesh(
+    //     assets_dir + "tetMesh/ball.msh", 0.3, make_double3(0, 0.4, 0));
     // tetMesh.load_tetrahedraMesh(
     //     assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, -0, 0));
-    std::cout << tetMesh.vertexNum << "  " << tetMesh.tetrahedraNum << std::endl;
-    for (int i = 0; i < tetMesh.vertexNum; i++)
+    // std::cout << tetMesh.vertexNum << "  " << tetMesh.tetrahedraNum << std::endl;
+    // for (int i = 0; i < tetMesh.vertexNum; i++)
+    // {
+    //     tetMesh.boundaryTypies[i] = 1;
+    //     __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
+    // }
+    tetMesh.load_triMesh(assets_dir + "triMesh/grid_100x100.obj", 1, make_double3(0, -0, 0), 0);
+    int size = 100;
+    for (int i = 0; i < size; i++)
     {
-        tetMesh.boundaryTypies[i] = 1;
-        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
+        // tetMesh.boundaryTypies[i] = 1;
+        // __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
+        // int j = tetMesh.vertexNum - 1 - i;
+        // tetMesh.boundaryTypies[j] = -1;
+        // __GEIGEN__::__init_Mat3x3(tetMesh.constraints[j], 0);
+
+        tetMesh.boundaryTypies[i*size] = 1;
+        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i*size], 0);
+        int j = (i+1)*size - 1;
+        tetMesh.boundaryTypies[j] = -1;
+        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[j], 0);
     }
-    tetMesh.load_triMesh(assets_dir + "triMesh/grid_10x10.obj", 1, make_double3(0, -0, 0), 0);
     // tetMesh.boundaryTypies[0] = 1;
     //__GEIGEN__::__set_Mat_val(tetMesh.constraints[0], 0, 0, 0, 0, 0, 0, 0, 0, 0);
     //tetMesh.constraints[0] =
@@ -986,10 +1001,10 @@ void display(void)
         //saveSurface = !saveSurface;
     }
 
-    if(step >= totalFrames)
-    {
-       exit(0);
-    }
+    // if(step >= totalFrames)
+    // {
+    //    exit(0);
+    // }
 }
 
 void init(int argc, char** argv)

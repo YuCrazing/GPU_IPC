@@ -7960,16 +7960,16 @@ __global__ void _updateBoundaryMoveDir(double3* _vertexes,
 
     _moveDir[idx] = make_double3(0, 0, 0);
     double mvl    = -1 * ipc_dt * alpha;
-    if((_btype[idx]) == 1)
-    {
-        _moveDir[idx] = make_double3(mvl, 0, 0);  //__GEIGEN__::__minus(__GEIGEN__::__M_v_multiply(rotationL, _vertexes[idx]), _vertexes[idx]);
-    }
-    //    if ((_btype[idx]) > 0) {
-    //        _moveDir[idx] = __GEIGEN__::__minus(__GEIGEN__::__M_v_multiply(rotationL, _vertexes[idx]), _vertexes[idx]);
-    //    }
-    //    if ((_btype[idx]) < 0) {
-    //        _moveDir[idx] = __GEIGEN__::__minus(__GEIGEN__::__M_v_multiply(rotationR, _vertexes[idx]), _vertexes[idx]);
-    //    }
+    // if((_btype[idx]) == 1)
+    // {
+    //     _moveDir[idx] = make_double3(mvl, 0, 0);  //__GEIGEN__::__minus(__GEIGEN__::__M_v_multiply(rotationL, _vertexes[idx]), _vertexes[idx]);
+    // }
+       if ((_btype[idx]) > 0) {
+           _moveDir[idx] = __GEIGEN__::__minus(__GEIGEN__::__M_v_multiply(rotationL, _vertexes[idx]), _vertexes[idx]);
+       }
+       if ((_btype[idx]) < 0) {
+           _moveDir[idx] = __GEIGEN__::__minus(__GEIGEN__::__M_v_multiply(rotationR, _vertexes[idx]), _vertexes[idx]);
+       }
 }
 
 __global__ void _computeXTilta(int*     _btype,
@@ -10362,7 +10362,7 @@ double ttime1       = 0;
 double ttime2       = 0;
 double ttime3       = 0;
 double ttime4       = 0;
-bool   isRotate     = false;
+bool   isRotate     = true;
 void   GIPC::IPC_Solver(device_TetraData& TetMesh)
 {
     //double animation_fullRate = 0;

@@ -6,8 +6,8 @@ export LD_LIBRARY_PATH=$CUDA_HOME/lib64:${LD_LIBRARY_PATH}
 
 
 # build_type="Debug"
-# build_type="RelWithDebInfo"
-build_type="Release"
+build_type="RelWithDebInfo"
+# build_type="Release"
 
 mkdir build; cd build
 # cmake Could NOT find OpenGL
