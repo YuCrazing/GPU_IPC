@@ -27,6 +27,7 @@
 #include "math.h"
 #include <stdint.h>  
 #include <cstring>
+#include <cassert>
 int              collision_detection_buff_scale = 1;
 double           motion_rate                    = 1;
 mesh_obj         obj;
@@ -63,8 +64,8 @@ bool  screenshot    = false;
 bool drawbvh     = false;
 bool drawSurface = true;
 
-bool    stop        = true;
-int     totalFrames = 51200000;
+bool    stop        = false;
+int     totalFrames = 240;
 double3 center;
 double3 Ssize;
 
@@ -81,6 +82,12 @@ GLuint shaderProgram;
 int clothFaceOffset = 0;
 int bodyVertOffset  = 0;
 
+double3 ball_center;
+double  ball_radius;
+double3 cloth_center;
+double3 cloth_velocity;
+std::string specific_output_dir = std::string{gipc::output_dir()} + "saveSurface/";
+bool headless=true;
 
 void Init_CUDA()
 {
@@ -693,11 +700,26 @@ void LoadSettings()
 
 void initScene1(int argc, char** argv)
 {
+    // Read ball_center, ball_radius, cloth_center, cloth_velocity, specific_output_dir from command line.
+    assert (argc == 1 || argc == 12);
+    if (argc == 12) {
+        ball_center = make_double3(atof(argv[1]), atof(argv[2]), atof(argv[3]));
+        ball_radius = atof(argv[4]);
+        cloth_center = make_double3(atof(argv[5]), atof(argv[6]), atof(argv[7]));
+        cloth_velocity = make_double3(atof(argv[8]), atof(argv[9]), atof(argv[10]));
+        specific_output_dir = argv[11];
+    } else {
+        ball_center = make_double3(0, -0.4, 0);
+        ball_radius = 0.15;
+        cloth_center = make_double3(0, 0, 0);
+        cloth_velocity = make_double3(0, 0, 0);
+    }
+    double ball_scale = ball_radius / 0.15;
 
     auto assets_dir = std::string{gipc::assets_dir()};
     //string filePath(scene_file_path);
     tetMesh.load_tetrahedraMesh(
-        assets_dir + "tetMesh/ball.msh", 0.3, make_double3(0, -0.4, 0));
+        assets_dir + "tetMesh/ball_subdiv4_r0.15.msh", ball_scale, ball_center);
     // tetMesh.load_tetrahedraMesh(
     //     assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, -0, 0));
     std::cout << tetMesh.vertexNum << "  " << tetMesh.tetrahedraNum << std::endl;
@@ -707,12 +729,10 @@ void initScene1(int argc, char** argv)
         tetMesh.boundaryTypies[i] = 1;
         __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
     }
-    tetMesh.load_triMesh(assets_dir + "triMesh/grid_10x10.obj", 1, make_double3(0, 0, 0), 0);
+    tetMesh.load_triMesh(assets_dir + "triMesh/grid_10x10.obj", 1, cloth_center, 0);
     for(int i = collision_vn; i < tetMesh.vertexNum; i++)
     {
-        {
-            tetMesh.velocities[i] = make_double3(0, 0, 0);
-        }
+        tetMesh.velocities[i] = cloth_velocity;
     }
     // tetMesh.load_triMesh(assets_dir + "triMesh/Female_T-Shirt_4_merged_lying.obj", 1, make_double3(0, -0.9, 0), 0);
     // int size = 100;
@@ -943,7 +963,9 @@ void initScene1(int argc, char** argv)
 
 void display(void)
 {
-    draw_Scene3D();
+    if (!headless) {
+        draw_Scene3D();
+    }
 
     //    if (saveSurface) {
     //        saveSurfaceMesh("saveSurface/surf_");
@@ -1001,7 +1023,8 @@ void display(void)
         
 
 
-        auto output_path = std::string{gipc::output_dir()} + "saveSurface/";
+        auto output_path = specific_output_dir;
+        // auto output_path = std::string{gipc::output_dir()} + "saveSurface/";
         std::filesystem::exists(output_path)
             || std::filesystem::create_directories(output_path);
 
@@ -1009,10 +1032,10 @@ void display(void)
         //saveSurface = !saveSurface;
     }
 
-    // if(step >= totalFrames)
-    // {
-    //    exit(0);
-    // }
+    if(step >= totalFrames)
+    {
+       exit(0);
+    }
 }
 
 void init(int argc, char** argv)
@@ -1200,49 +1223,58 @@ void SpecialKey(GLint key, GLint x, GLint y)
 
 int main(int argc, char** argv)
 {
-    glutInit(&argc, argv);
-    //glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+    if(headless){
+        init(argc, argv);
+        while(true) {
+            display();
+        }
+    }
+    else{
+        glutInit(&argc, argv);
+        //glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 
-    glutSetOption(GLUT_MULTISAMPLE, 16);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_MULTISAMPLE);
+        glutSetOption(GLUT_MULTISAMPLE, 16);
+        glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_MULTISAMPLE);
 
-    glutInitWindowSize(window_width, window_height);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("FEM");
+        glutInitWindowSize(window_width, window_height);
+        glutInitWindowPosition(0, 0);
+        glutCreateWindow("FEM");
 
-    //if(argc < 2)
-    //   {
-    //       printf("pls input the mesh path\n");
-    //   }
-    init(argc, argv);
-    //if(argc == 3)
-    //{
-    //    totalFrames = atoi(argv[2]);
-    //}
+        //if(argc < 2)
+        //   {
+        //       printf("pls input the mesh path\n");
+        //   }
+        init(argc, argv);
+        //if(argc == 3)
+        //{
+        //    totalFrames = atoi(argv[2]);
+        //}
 
-    //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
-    //glEnable(GL_POINT_SPRITE_ARB);
-    //glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
-
-
-    glEnable(GL_MULTISAMPLE);
-    glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST);
-
-
-    glutDisplayFunc(display);
-
-
-    //glutDisplayFunc(display_func);
-    glutReshapeFunc(reshape_func);
-    glutKeyboardFunc(keyboard_func);
-    glutSpecialFunc(&SpecialKey);
-    glutMouseFunc(mouse_func);
-    glutMotionFunc(motion_func);
-    glutIdleFunc(idle_func);
+        //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
+        //glEnable(GL_POINT_SPRITE_ARB);
+        //glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
 
 
-    glutMainLoop();
-    //return 0;
+        glEnable(GL_MULTISAMPLE);
+        glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST);
+
+
+        glutDisplayFunc(display);
+
+
+        //glutDisplayFunc(display_func);
+        glutReshapeFunc(reshape_func);
+        glutKeyboardFunc(keyboard_func);
+        glutSpecialFunc(&SpecialKey);
+        glutMouseFunc(mouse_func);
+        glutMotionFunc(motion_func);
+        glutIdleFunc(idle_func);
+
+
+        glutMainLoop();
+
+    }
+    return 0;
 }

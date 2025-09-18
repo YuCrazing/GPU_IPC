@@ -1791,24 +1791,24 @@ void MASPreconditioner::initPreconditioner(int vertNum, int totalNeighborNum, in
 void MASPreconditioner::FreeMAS()
 {
 
-    CUDA_SAFE_CALL(cudaFree(d_denseLevel));
-    CUDA_SAFE_CALL(cudaFree(d_coarseSpaceTables));
-    CUDA_SAFE_CALL(cudaFree(d_levelSize));
-    CUDA_SAFE_CALL(cudaFree(d_goingNext));
-    CUDA_SAFE_CALL(cudaFree(d_prefixOriginal));
-    CUDA_SAFE_CALL(cudaFree(d_nextPrefix));
-    CUDA_SAFE_CALL(cudaFree(d_nextPrefixSum));
-    CUDA_SAFE_CALL(cudaFree(d_prefixSumOriginal));
-    CUDA_SAFE_CALL(cudaFree(d_fineConnectMask));
-    CUDA_SAFE_CALL(cudaFree(d_nextConnectMask));
-    CUDA_SAFE_CALL(cudaFree(d_neighborList));
-    CUDA_SAFE_CALL(cudaFree(d_neighborListInit));
-    CUDA_SAFE_CALL(cudaFree(d_neighborStart));
-    CUDA_SAFE_CALL(cudaFree(d_neighborStartTemp));
-    CUDA_SAFE_CALL(cudaFree(d_neighborNum));
-    CUDA_SAFE_CALL(cudaFree(d_neighborNumInit));
-    CUDA_SAFE_CALL(cudaFree(d_Mat96));
-    CUDA_SAFE_CALL(cudaFree(d_inverseMat96));
-    CUDA_SAFE_CALL(cudaFree(d_multiLevelR));
-    CUDA_SAFE_CALL(cudaFree(d_multiLevelZ));
+    (cudaFree(d_denseLevel));
+    (cudaFree(d_coarseSpaceTables));
+    (cudaFree(d_levelSize));
+    (cudaFree(d_goingNext));
+    (cudaFree(d_prefixOriginal));
+    (cudaFree(d_nextPrefix));
+    (cudaFree(d_nextPrefixSum));
+    (cudaFree(d_prefixSumOriginal));
+    (cudaFree(d_fineConnectMask));
+    (cudaFree(d_nextConnectMask));
+    (cudaFree(d_neighborList));
+    (cudaFree(d_neighborListInit));
+    (cudaFree(d_neighborStart));
+    (cudaFree(d_neighborStartTemp));
+    (cudaFree(d_neighborNum));
+    (cudaFree(d_neighborNumInit));
+    (cudaFree(d_Mat96));
+    (cudaFree(d_inverseMat96));
+    (cudaFree(d_multiLevelR));
+    (cudaFree(d_multiLevelZ));
 }

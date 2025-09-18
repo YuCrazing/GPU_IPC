@@ -1534,19 +1534,19 @@ void PCG_Data::Malloc_DEVICE_MEM(const int& vertexNum, const int& tetrahedraNum)
 }
 
 void PCG_Data::FREE_DEVICE_MEM() {
-    CUDA_SAFE_CALL(cudaFree(squeue));
+    (cudaFree(squeue));
     //CUDA_SAFE_CALL(cudaFree(b));
-    CUDA_SAFE_CALL(cudaFree(P));
-    CUDA_SAFE_CALL(cudaFree(r));
-    CUDA_SAFE_CALL(cudaFree(c));
-    CUDA_SAFE_CALL(cudaFree(z));
-    CUDA_SAFE_CALL(cudaFree(q));
-    CUDA_SAFE_CALL(cudaFree(s));
-    CUDA_SAFE_CALL(cudaFree(dx));
+    (cudaFree(P));
+    (cudaFree(r));
+    (cudaFree(c));
+    (cudaFree(z));
+    (cudaFree(q));
+    (cudaFree(s));
+    (cudaFree(dx));
     //CUDA_SAFE_CALL(cudaFree(tempDx));
     if (P_type > 0) {
-        CUDA_SAFE_CALL(cudaFree(filterTempVec3));
-        CUDA_SAFE_CALL(cudaFree(preconditionTempVec3));
+        (cudaFree(filterTempVec3));
+        (cudaFree(preconditionTempVec3));
         
     }
     if (P_type == 1) {
@@ -1587,13 +1587,13 @@ void BHessian::MALLOC_DEVICE_MEM_O(const int& tet_number, const int& surfvert_nu
 }
 
 void BHessian::FREE_DEVICE_MEM() {
-    CUDA_SAFE_CALL(cudaFree(H12x12));
-    CUDA_SAFE_CALL(cudaFree(H9x9));
-    CUDA_SAFE_CALL(cudaFree(H6x6));
-    CUDA_SAFE_CALL(cudaFree(H3x3));
-    CUDA_SAFE_CALL(cudaFree(D1Index));
-    CUDA_SAFE_CALL(cudaFree(D2Index));
-    CUDA_SAFE_CALL(cudaFree(D3Index));
-    CUDA_SAFE_CALL(cudaFree(D4Index));
+    (cudaFree(H12x12));
+    (cudaFree(H9x9));
+    (cudaFree(H6x6));
+    (cudaFree(H3x3));
+    (cudaFree(D1Index));
+    (cudaFree(D2Index));
+    (cudaFree(D3Index));
+    (cudaFree(D4Index));
 }
 

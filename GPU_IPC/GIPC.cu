@@ -8404,21 +8404,21 @@ __global__ void _calFrictionLastH_DistAndTan(const double3*    _vertexes,
 /// </summary>
 void GIPC::FREE_DEVICE_MEM()
 {
-    CUDA_SAFE_CALL(cudaFree(_MatIndex));
-    CUDA_SAFE_CALL(cudaFree(_collisonPairs));
-    CUDA_SAFE_CALL(cudaFree(_ccd_collisonPairs));
-    CUDA_SAFE_CALL(cudaFree(_cpNum));
-    CUDA_SAFE_CALL(cudaFree(_close_cpNum));
-    CUDA_SAFE_CALL(cudaFree(_close_gpNum));
-    CUDA_SAFE_CALL(cudaFree(_environment_collisionPair));
-    CUDA_SAFE_CALL(cudaFree(_gpNum));
+    (cudaFree(_MatIndex));
+    (cudaFree(_collisonPairs));
+    (cudaFree(_ccd_collisonPairs));
+    (cudaFree(_cpNum));
+    (cudaFree(_close_cpNum));
+    (cudaFree(_close_gpNum));
+    (cudaFree(_environment_collisionPair));
+    (cudaFree(_gpNum));
     //CUDA_SAFE_CALL(cudaFree(_moveDir));
-    CUDA_SAFE_CALL(cudaFree(_groundNormal));
-    CUDA_SAFE_CALL(cudaFree(_groundOffset));
+    (cudaFree(_groundNormal));
+    (cudaFree(_groundOffset));
 
-    CUDA_SAFE_CALL(cudaFree(_faces));
-    CUDA_SAFE_CALL(cudaFree(_edges));
-    CUDA_SAFE_CALL(cudaFree(_surfVerts));
+    (cudaFree(_faces));
+    (cudaFree(_edges));
+    (cudaFree(_surfVerts));
 
     pcg_data.FREE_DEVICE_MEM();
 

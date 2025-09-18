@@ -40,7 +40,7 @@ inline void cuda_safe_call_(cudaError err, const char* file_name, const int num_
             << "CUDA Running API error[" << (int)err << "]: "
             << cudaGetErrorString(err) << std::endl;
 
-        exit(0);
+        exit(1);
     }
 }
 #endif

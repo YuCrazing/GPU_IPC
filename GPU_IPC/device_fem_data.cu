@@ -64,35 +64,35 @@ device_TetraData::~device_TetraData() {
 }
 
 void device_TetraData::FREE_DEVICE_MEM() {
-	CUDA_SAFE_CALL(cudaFree(sortIndex));
-	CUDA_SAFE_CALL(cudaFree(sortMapVertIndex));
-	CUDA_SAFE_CALL(cudaFree(vertexes)); 
-	CUDA_SAFE_CALL(cudaFree(o_vertexes));
-	CUDA_SAFE_CALL(cudaFree(temp_double3Mem));
-	CUDA_SAFE_CALL(cudaFree(velocities));
-	CUDA_SAFE_CALL(cudaFree(rest_vertexes));
-	CUDA_SAFE_CALL(cudaFree(xTilta));
-	CUDA_SAFE_CALL(cudaFree(fb));
-	CUDA_SAFE_CALL(cudaFree(tetrahedras));
-	CUDA_SAFE_CALL(cudaFree(tempTetrahedras));
-	CUDA_SAFE_CALL(cudaFree(volum));
-	CUDA_SAFE_CALL(cudaFree(masses));
-	CUDA_SAFE_CALL(cudaFree(DmInverses));
-	CUDA_SAFE_CALL(cudaFree(Constraints));
-	CUDA_SAFE_CALL(cudaFree(tempMat3x3));
-	CUDA_SAFE_CALL(cudaFree(MChash));
-	CUDA_SAFE_CALL(cudaFree(tempDouble));
-	CUDA_SAFE_CALL(cudaFree(BoundaryType));
-	CUDA_SAFE_CALL(cudaFree(tempBoundaryType));
+	(cudaFree(sortIndex));
+	(cudaFree(sortMapVertIndex));
+	(cudaFree(vertexes)); 
+	(cudaFree(o_vertexes));
+	(cudaFree(temp_double3Mem));
+	(cudaFree(velocities));
+	(cudaFree(rest_vertexes));
+	(cudaFree(xTilta));
+	(cudaFree(fb));
+	(cudaFree(tetrahedras));
+	(cudaFree(tempTetrahedras));
+	(cudaFree(volum));
+	(cudaFree(masses));
+	(cudaFree(DmInverses));
+	(cudaFree(Constraints));
+	(cudaFree(tempMat3x3));
+	(cudaFree(MChash));
+	(cudaFree(tempDouble));
+	(cudaFree(BoundaryType));
+	(cudaFree(tempBoundaryType));
 
-	CUDA_SAFE_CALL(cudaFree(targetIndex));
-	CUDA_SAFE_CALL(cudaFree(targetVert));
-	CUDA_SAFE_CALL(cudaFree(triDmInverses));
-	CUDA_SAFE_CALL(cudaFree(area));
-	CUDA_SAFE_CALL(cudaFree(triangles));
+	(cudaFree(targetIndex));
+	(cudaFree(targetVert));
+	(cudaFree(triDmInverses));
+	(cudaFree(area));
+	(cudaFree(triangles));
 
-	CUDA_SAFE_CALL(cudaFree(tri_edges));
-	CUDA_SAFE_CALL(cudaFree(tri_edge_adj_vertex));
+	(cudaFree(tri_edges));
+	(cudaFree(tri_edge_adj_vertex));
 }
 
 

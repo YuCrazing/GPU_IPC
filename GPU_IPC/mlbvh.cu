@@ -1427,12 +1427,12 @@ void fullCCDselfQuery_vf(const int* _btype, const double3* _vertexes, const doub
 }
 
 void lbvh::FREE_DEVICE_MEM() {
-    CUDA_SAFE_CALL(cudaFree(_indices));
-    CUDA_SAFE_CALL(cudaFree(_MChash));
-    CUDA_SAFE_CALL(cudaFree(_nodes));
-    CUDA_SAFE_CALL(cudaFree(_bvs));
-    CUDA_SAFE_CALL(cudaFree(_flags));
-    CUDA_SAFE_CALL(cudaFree(_tempLeafBox));
+    (cudaFree(_indices));
+    (cudaFree(_MChash));
+    (cudaFree(_nodes));
+    (cudaFree(_bvs));
+    (cudaFree(_flags));
+    (cudaFree(_tempLeafBox));
 }
 
 void lbvh::MALLOC_DEVICE_MEM(const int& number) {
