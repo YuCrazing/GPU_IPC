@@ -31,7 +31,7 @@ if __name__ == "__main__":
     for i, p in enumerate(all_params):
         # if i != 24:
         #     continue
-        specific_output_dir = "/home/yuzhang/repos/GPU_IPC/Output/sims/" + p["specific_output_dir"]
+        specific_output_dir = "/home/yuzhang/repos/GPU_IPC/Output/sims_10x10/" + p["specific_output_dir"]
         args = [
             EXEC_PATH,
             str(p["ball_center"][0]), str(p["ball_center"][1]), str(p["ball_center"][2]),

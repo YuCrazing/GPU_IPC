@@ -68,52 +68,67 @@ def batch_process_geometry(hip_path, input_dir, output_dir):
         return
 
     
-    # --- 5. 查找并处理所有输入OBJ文件 ---
+    # --- 5. 递归查找并处理所有输入OBJ文件 ---
+    processed_count = 0
     try:
-        # 筛选出目录中所有以 .obj 结尾的文件（不区分大小写）
-        obj_files = [f for f in os.listdir(input_dir) if f.lower().endswith(".obj")]
-        if not obj_files:
-            print(f"错误：在输入目录 '{input_dir}' 中未找到任何 .obj 文件。")
-            output_rop.destroy() # 清理创建的节点
-            return
+        # 使用 os.walk 递归遍历输入目录
+        for root, _, files in os.walk(input_dir):
+            for filename in files:
+                # 检查文件是否为 .obj 文件（不区分大小写）
+                if not filename.lower().endswith(".obj"):
+                    continue
 
-        print(f"找到 {len(obj_files)} 个OBJ文件待处理...")
+                processed_count += 1
 
-        for filename in obj_files:
-            # 构建完整的文件路径。Houdini偏好使用正斜杠'/'。
-            input_path = os.path.join(input_dir, filename).replace('\\', '/')
-            
-            # 构建输出路径，添加前缀以避免覆盖或命名冲突
-            output_filename = f"processed_{filename}"
-            output_path = os.path.join(output_dir, output_filename).replace('\\', '/')
+                # a. 构建完整的输入文件路径
+                input_path = os.path.join(root, filename).replace('\\', '/')
 
-            print(f"\n正在处理: {filename}")
-            print(f"  输入: {input_path}")
-            print(f"  输出: {output_path}")
+                # b. 构建输出路径，同时保留相对目录结构
+                #    获取当前文件相对于输入根目录的路径
+                relative_dir = os.path.relpath(root, input_dir)
+                
+                #    构建目标输出目录
+                #    如果文件直接在input_dir下, relative_dir会是'.', os.path.join会正确处理
+                target_output_dir = os.path.join(output_dir, relative_dir)
 
-            # a. 更新输入节点的'file'参数
-            # 'file'是“Geometry File”参数的内部名称
-            input_node.parm("file").set(input_path)
+                #    确保目标子目录存在
+                if not os.path.exists(target_output_dir):
+                    os.makedirs(target_output_dir)
 
-            # b. 更新输出ROP节点的'sopoutput'参数
-            # 'sopoutput'是“Output File”参数的内部名称
-            output_rop.parm("sopoutput").set(output_path)
+                # c. 根据您的命名规则创建输出文件名
+                #    例如: "surf_0001.obj" -> "processed_0001.obj"
+                output_filename = filename.replace('surf_', 'processed_')
 
-            # c. 执行渲染（即“烹饪”节点链并保存文件）
-            try:
-                output_rop.render()
-                print(f"  -> 成功保存: {output_filename}")
-            except hou.Error as e:
-                print(f"  -> 保存文件时出错: {e}")
+                # d. 构建最终的完整输出文件路径
+                output_path = os.path.join(target_output_dir, output_filename).replace('\\', '/')
+
+                print(f"\n正在处理: {filename}")
+                print(f"  输入: {input_path}")
+                print(f"  输出: {output_path}")
+
+                # e. 更新Houdini节点参数
+                input_node.parm("file").set(input_path)
+                output_rop.parm("sopoutput").set(output_path)
+
+                # f. 执行渲染（保存文件）
+                try:
+                    output_rop.render()
+                    print(f"  -> 成功保存: {output_filename}")
+                except hou.Error as e:
+                    print(f"  -> 保存文件时出错: {e}")
+
+        if processed_count == 0:
+            print(f"警告：在输入目录 '{input_dir}' 及其子目录中未找到任何 .obj 文件。")
 
     finally:
         # --- 6. 清理 ---
-        # 无论处理成功与否，都删除我们临时创建的ROP节点
-        if output_rop:
+        # 无论处理成功与否，都删除ROP节点
+        if output_rop and hou.node(output_rop.path()): # 检查节点是否还存在
             output_rop.destroy()
-            print("\n已清理临时输出节点。")
+            print("\n已清理输出节点。")
 
-    print("\n所有文件处理完毕。")
+    print(f"\n所有文件处理完毕，共处理了 {processed_count} 个文件。")
+
 
 
 if __name__ == "__main__":
