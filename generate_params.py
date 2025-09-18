@@ -15,7 +15,7 @@ for i in range(N):
         ball_radius = float(rng.uniform(2e-2, 0.3))
         cloth_center = rng.uniform([-0.5, 0.0, -0.5], [0.5, 1.0, 0.5]).tolist()
         cloth_velocity = rng.uniform([-1.0, -3.0, -1.0], [1.0, 3.0, 1.0]).tolist()
-        # 确保布料在球上方
+        # Make sure the cloth is above the ball
         if cloth_center[1] - ball_center[1] > ball_radius + eps:
             break
     # specific_output_dir 按要求格式 sim_00000/
