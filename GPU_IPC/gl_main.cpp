@@ -56,7 +56,7 @@ float yRotLength    = 0.0f;
 float window_width  = 1000;
 float window_height = 1000;
 int   s_dimention   = 3;
-bool  saveSurface   = false;
+bool  saveSurface   = true;
 bool  change        = false;
 bool  screenshot    = false;
 
@@ -708,17 +708,22 @@ void initScene1(int argc, char** argv)
     // }
     tetMesh.load_triMesh(assets_dir + "triMesh/grid_100x100.obj", 1, make_double3(0, -0, 0), 0);
     int size = 100;
-    for (int i = 0; i < size; i++)
+    for (int k = 0; k < size; k++)
     {
-        // tetMesh.boundaryTypies[i] = 1;
-        // __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
-        // int j = tetMesh.vertexNum - 1 - i;
-        // tetMesh.boundaryTypies[j] = -1;
-        // __GEIGEN__::__init_Mat3x3(tetMesh.constraints[j], 0);
-
-        tetMesh.boundaryTypies[i*size] = 1;
-        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i*size], 0);
-        int j = (i+1)*size - 1;
+        int i = k * size;
+        // for(int ct = i; ct < i + 5; ct++)
+        // {
+        //     tetMesh.boundaryTypies[ct] = 1;
+        //     __GEIGEN__::__init_Mat3x3(tetMesh.constraints[ct], 0);
+        // }
+        tetMesh.boundaryTypies[i] = 1;
+        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
+        int j = (k+1)*size - 1;
+        // for(int ct = j; ct > j - 5; ct--)
+        // {
+        //     tetMesh.boundaryTypies[ct] = -1;
+        //     __GEIGEN__::__init_Mat3x3(tetMesh.constraints[ct], 0);
+        // }
         tetMesh.boundaryTypies[j] = -1;
         __GEIGEN__::__init_Mat3x3(tetMesh.constraints[j], 0);
     }
@@ -816,12 +821,16 @@ void initScene1(int argc, char** argv)
     ipc.tri_edge_num   = tetMesh.tri_edges.size();
 
     //ipc.IPC_dt = 0.01 / 1.0;//1.0 / 30;//1.0 / 100;
+    // ipc.MAX_CCD_COLLITION_PAIRS_NUM =
+    //     1 * collision_detection_buff_scale
+    //     * (((double)(ipc.surface_Num * 15 + ipc.edge_Num * 10))
+    //        * std::max((ipc.IPC_dt / 0.01), 2.0));
+    // ipc.MAX_COLLITION_PAIRS_NUM = (ipc.surf_vertexNum * 3 + ipc.edge_Num * 2)
+    //                               * 3 * collision_detection_buff_scale;
+
     ipc.MAX_CCD_COLLITION_PAIRS_NUM =
-        1 * collision_detection_buff_scale
-        * (((double)(ipc.surface_Num * 15 + ipc.edge_Num * 10))
-           * std::max((ipc.IPC_dt / 0.01), 2.0));
-    ipc.MAX_COLLITION_PAIRS_NUM = (ipc.surf_vertexNum * 3 + ipc.edge_Num * 2)
-                                  * 3 * collision_detection_buff_scale;
+        100000000;
+    ipc.MAX_COLLITION_PAIRS_NUM = 10000000;
 
     ipc.triangleNum = tetMesh.triangleNum;
     ipc.targetVert  = d_tetMesh.targetVert;
@@ -839,7 +848,7 @@ void initScene1(int argc, char** argv)
            ipc.MAX_COLLITION_PAIRS_NUM);
 
     //ipc.USE_MAS = false;
-    ipc.pcg_data.P_type = 1;
+    ipc.pcg_data.P_type = 0;
     ipc.MALLOC_DEVICE_MEM();
 
     CUDA_SAFE_CALL(cudaMemcpy(

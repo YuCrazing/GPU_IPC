@@ -3,8 +3,8 @@ volume_mesh_YoungsModulus                     1e6
 poisson_rate                                  0.49
 friction_rate                                 0.4
 triangle(cloth)_mesh_thickness                0.001
-triangle(cloth)_mesh_YoungsModulus            1000000
-triangle(cloth)_mesh_density                  200
+triangle(cloth)_mesh_YoungsModulus            100000
+triangle(cloth)_mesh_density                  1000
 motion_stiffness                              1
 collision_detection_buff_scale                1
 motion_rate									  1

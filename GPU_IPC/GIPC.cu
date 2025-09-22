@@ -7959,7 +7959,7 @@ __global__ void _updateBoundaryMoveDir(double3* _vertexes,
         rotationR, 1, 0, 0, 0, cos(angleX), -sin(angleX), 0, sin(angleX), cos(angleX));
 
     _moveDir[idx] = make_double3(0, 0, 0);
-    double mvl    = -1 * ipc_dt * alpha;
+    // double mvl    = -1 * ipc_dt * alpha;
     // if((_btype[idx]) == 1)
     // {
     //     _moveDir[idx] = make_double3(mvl, 0, 0);  //__GEIGEN__::__minus(__GEIGEN__::__M_v_multiply(rotationL, _vertexes[idx]), _vertexes[idx]);
@@ -10179,7 +10179,7 @@ int              GIPC::solve_subIP(device_TetraData& TetMesh,
 
         BH.updateDNum(triangleNum, tetrahedraNum, h_cpNum + 1, h_cpNum_last + 1, tri_edge_num);
 
-        //printf("collision num  %d\n", h_cpNum[0]);
+        printf("collision num  %d\n", h_cpNum[0]);
 
         cudaEventRecord(start);
         timemakePd += computeGradientAndHessian(TetMesh);
