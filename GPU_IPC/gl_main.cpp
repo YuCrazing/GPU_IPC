@@ -694,42 +694,24 @@ void LoadSettings()
 void initScene1(int argc, char** argv)
 {
 
+
+    string meshname_garment      = "triMesh/Female_T-Shirt_merged_garment.obj";
+    string meshname_avatar_stand      = "triMesh/Female_T-Shirt_avatar_edited_stand.obj";
+
     auto assets_dir = std::string{gipc::assets_dir()};
-    //string filePath(scene_file_path);
-    // tetMesh.load_tetrahedraMesh(
-    //     assets_dir + "tetMesh/ball.msh", 0.3, make_double3(0, 0.4, 0));
-    // tetMesh.load_tetrahedraMesh(
-    //     assets_dir + "tetMesh/bunny2.msh", 0.2, make_double3(0, -0, 0));
-    // std::cout << tetMesh.vertexNum << "  " << tetMesh.tetrahedraNum << std::endl;
-    // for (int i = 0; i < tetMesh.vertexNum; i++)
-    // {
-    //     tetMesh.boundaryTypies[i] = 1;
-    //     __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
-    // }
-    tetMesh.load_triMesh(assets_dir + "triMesh/grid_100x100.obj", 1, make_double3(0, -0, 0), 0);
-    int size = 100;
-    for (int k = 0; k < size; k++)
-    {
-        int i = k * size;
-        // for(int ct = i; ct < i + 5; ct++)
-        // {
-        //     tetMesh.boundaryTypies[ct] = 1;
-        //     __GEIGEN__::__init_Mat3x3(tetMesh.constraints[ct], 0);
-        // }
-        tetMesh.boundaryTypies[i] = 1;
-        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[i], 0);
-        int j = (k+1)*size - 1;
-        // for(int ct = j; ct > j - 5; ct--)
-        // {
-        //     tetMesh.boundaryTypies[ct] = -1;
-        //     __GEIGEN__::__init_Mat3x3(tetMesh.constraints[ct], 0);
-        // }
-        tetMesh.boundaryTypies[j] = -1;
-        __GEIGEN__::__init_Mat3x3(tetMesh.constraints[j], 0);
-    }
-    // tetMesh.boundaryTypies[0] = 1;
-    //__GEIGEN__::__set_Mat_val(tetMesh.constraints[0], 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    //tetMesh.constraints[0] =
+
+    // ipc.IPC_dt                  = 5e-3;
+    // ipc.relative_dhat           = 1e-3;
+
+
+    tetMesh.load_triMesh(
+        assets_dir + meshname_garment, 1, make_double3(0, -0.5, 0), 0);
+
+
+    tetMesh.load_triMesh(
+        assets_dir + meshname_avatar_stand, 1, make_double3(0, -0.5, 0), 2);
+
+
     tetMesh.getSurface();
 
     initFEM(tetMesh);
